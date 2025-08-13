@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'signup_page.dart';
+import 'intro_page.dart'; // ✅ New intro page instead of direct signup
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
                 // Log In Button
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFB5EAD7), // pastel green
+                    backgroundColor: const Color(0xFFB5EAD7), // pastel green
                     foregroundColor: Colors.black87,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 50,
@@ -51,7 +51,9 @@ class HomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
                     );
                   },
                   child: const Text('Log In', style: TextStyle(fontSize: 18)),
@@ -62,7 +64,7 @@ class HomePage extends StatelessWidget {
                 // Sign Up Button
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFBC4AB), // pastel coral
+                    backgroundColor: const Color(0xFFFBC4AB), // pastel coral
                     foregroundColor: Colors.black87,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 50,
@@ -75,7 +77,9 @@ class HomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SignUpPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const IntroPage(),
+                      ),
                     );
                   },
                   child: const Text('Sign Up', style: TextStyle(fontSize: 18)),
