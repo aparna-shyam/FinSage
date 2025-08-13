@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "218627526229",
+    "project_id": "finsage-7c0a2",
+    "storage_bucket": "finsage-7c0a2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218627526229:android:33fc4cf47fa744261e0edc",
+        "android_client_info": {
+          "package_name": "com.example.finsage_ui"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLzGyPUrgQPH7ImAnS5eq_qm3fln24NOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
