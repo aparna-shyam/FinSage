@@ -3,6 +3,8 @@ import 'login_page.dart';
 import 'signup_page.dart';
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,10 +29,7 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'Your Smart Finance Companion',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
 
@@ -42,7 +41,9 @@ class HomePage extends StatelessWidget {
                     backgroundColor: Color(0xFFB5EAD7), // pastel green
                     foregroundColor: Colors.black87,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
+                      horizontal: 50,
+                      vertical: 15,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -53,10 +54,7 @@ class HomePage extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => LoginPage()),
                     );
                   },
-                  child: const Text(
-                    'Log In',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: const Text('Log In', style: TextStyle(fontSize: 18)),
                 ),
 
                 const SizedBox(height: 20),
@@ -67,7 +65,9 @@ class HomePage extends StatelessWidget {
                     backgroundColor: Color(0xFFFBC4AB), // pastel coral
                     foregroundColor: Colors.black87,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
+                      horizontal: 50,
+                      vertical: 15,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -78,10 +78,7 @@ class HomePage extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => SignUpPage()),
                     );
                   },
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: const Text('Sign Up', style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),

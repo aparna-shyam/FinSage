@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'forgotpass.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
