@@ -8,17 +8,20 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers to retrieve entered data if needed
+  // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  // Checkbox state
+  bool _receiveSuggestions = false;
 
   @override
   void dispose() {
-    // Clean up controllers when widget is removed
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -32,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF9BCD9B), // pastel green
+        backgroundColor: Color(0xFF9BCD9B),
         title: const Text('Sign Up'),
       ),
       body: Padding(
@@ -41,13 +44,29 @@ class _SignUpPageState extends State<SignUpPage> {
           key: _formKey,
           child: ListView(
             children: [
-              _buildTextField(controller: _nameController, label: 'Name', keyboardType: TextInputType.name),
+              _buildTextField(
+                controller: _nameController,
+                label: 'Name',
+                keyboardType: TextInputType.name,
+              ),
               SizedBox(height: 16),
-              _buildTextField(controller: _emailController, label: 'Email', keyboardType: TextInputType.emailAddress),
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email',
+                keyboardType: TextInputType.emailAddress,
+              ),
               SizedBox(height: 16),
-              _buildTextField(controller: _phoneController, label: 'Phone Number', keyboardType: TextInputType.phone),
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                keyboardType: TextInputType.phone,
+              ),
               SizedBox(height: 16),
-              _buildTextField(controller: _ageController, label: 'Age', keyboardType: TextInputType.number),
+              _buildTextField(
+                controller: _ageController,
+                label: 'Age',
+                keyboardType: TextInputType.number,
+              ),
               SizedBox(height: 16),
               _buildTextField(
                 controller: _passwordController,
@@ -60,10 +79,27 @@ class _SignUpPageState extends State<SignUpPage> {
                 label: 'Confirm Password',
                 obscureText: true,
               ),
+              SizedBox(height: 16),
+
+              // New Checkbox option
+              CheckboxListTile(
+                title: Text(
+                  'Would you like to receive suggestions on managing your finances properly?',
+                  style: TextStyle(fontSize: 14),
+                ),
+                value: _receiveSuggestions,
+                activeColor: Color(0xFF9BCD9B),
+                onChanged: (bool? value) {
+                  setState(() {
+                    _receiveSuggestions = value ?? false;
+                  });
+                },
+              ),
+
               SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF9BCD9B), // pastel green
+                  backgroundColor: Color(0xFF9BCD9B),
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -71,14 +107,19 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Handle sign up logic here
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Processing Sign Up...')),
+                      SnackBar(
+                        content: Text(
+                          _receiveSuggestions
+                              ? 'Processing Sign Up with suggestions enabled...'
+                              : 'Processing Sign Up...',
+                        ),
+                      ),
                     );
                   }
                 },
                 child: Text('Sign Up', style: TextStyle(fontSize: 18)),
-              )
+              ),
             ],
           ),
         ),

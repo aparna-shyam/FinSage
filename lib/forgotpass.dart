@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
-import 'forgotpass.dart';
 
-class LoginPage extends StatefulWidget {
+class ForgotPassPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _ForgotPassPageState createState() => _ForgotPassPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ForgotPassPageState extends State<ForgotPassPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controllers
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -25,62 +20,47 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF9BCD9B),
-        title: const Text('Login'),
+        title: const Text('Forgot Password'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Text(
+                'Enter your email to receive a verification code:',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 20),
               _buildTextField(
                 controller: _emailController,
                 label: 'Email',
                 keyboardType: TextInputType.emailAddress,
               ),
-              SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                obscureText: true,
-              ),
-
-              // Forgot Password link (centered)
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ForgotPassPage()),
-                    );
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Color(0xFF9BCD9B),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
               SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF9BCD9B),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Logging in...')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Verification code has been sent to your email. It will be valid for 10 minutes.',
+                        ),
+                      ),
+                    );
                   }
                 },
-                child: Text('Login', style: TextStyle(fontSize: 18)),
+                child: Text('Submit', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -93,12 +73,10 @@ class _LoginPageState extends State<LoginPage> {
     required TextEditingController controller,
     required String label,
     TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: obscureText,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter $label';
