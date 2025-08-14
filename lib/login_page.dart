@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import the Firebase Auth package
+import 'package:firebase_auth/firebase_auth.dart';
 import 'forgotpass.dart';
+import 'main_app_page.dart'; // Import the new page
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // New function to handle user login
+  // Corrected function to handle user login and navigation
   Future<void> _logIn() async {
     try {
       if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -37,12 +38,16 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text,
         password: _passwordController.text,
       );
-      // On success, show a success message and navigate to the home screen
+      // On success, show a success message
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-      // Example: Navigate to the next screen after successful login
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+
+      // Navigate to the next screen after successful login and replace the current route
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainAppPage()),
+      );
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'user-not-found') {
@@ -70,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF9BCD9B),
+        backgroundColor: const Color(0xFF9BCD9B),
         title: const Text('Login'),
       ),
       body: Padding(
@@ -84,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                 label: 'Email',
                 keyboardType: TextInputType.emailAddress,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(
                 controller: _passwordController,
                 label: 'Password',
@@ -97,10 +102,12 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ForgotPassPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPassPage(),
+                      ),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     'Forgot Password?',
                     style: TextStyle(
                       color: Color(0xFF9BCD9B),
@@ -110,21 +117,21 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF9BCD9B),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF9BCD9B),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _logIn(); // Call the new log-in function
+                    _logIn(); // Call the corrected log-in function
                   }
                 },
-                child: Text('Login', style: TextStyle(fontSize: 18)),
+                child: const Text('Login', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -153,7 +160,10 @@ class _LoginPageState extends State<LoginPage> {
         labelText: label,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,

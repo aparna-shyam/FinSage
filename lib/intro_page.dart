@@ -24,12 +24,12 @@ class IntroPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Title
-              Text(
+              const Text(
                 "FinSage",
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6B5B95), // pastel purple
+                  color: Color(0xFF6B5B95), // pastel purple
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -48,7 +48,7 @@ class IntroPage extends StatelessWidget {
               const SizedBox(height: 25),
 
               // Intro paragraph
-              Text(
+              const Text(
                 "FinSage is a financial management app that helps users track expenses, "
                 "categorize them automatically using AI, and predict future budgets. "
                 "Built with a secure backend, intuitive UI, and scalable architecture "
@@ -59,7 +59,7 @@ class IntroPage extends StatelessWidget {
                 "The system ensures smooth data flow between the user interface, backend logic, "
                 "database, and AI models, providing users with accurate insights and a seamless "
                 "financial tracking experience.",
-                style: const TextStyle(fontSize: 16, height: 1.5),
+                style: TextStyle(fontSize: 16, height: 1.5),
                 textAlign: TextAlign.justify,
               ),
               const SizedBox(height: 25),
