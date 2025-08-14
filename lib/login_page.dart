@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import the Firebase Auth package
 import 'forgotpass.dart';
 
 class LoginPage extends StatefulWidget {
@@ -20,6 +21,49 @@ class _LoginPageState extends State<LoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // New function to handle user login
+  Future<void> _logIn() async {
+    try {
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+        throw FirebaseAuthException(
+          code: 'empty-fields',
+          message: 'Email and password cannot be empty.',
+        );
+      }
+      // Attempts to sign in with email and password
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      // On success, show a success message and navigate to the home screen
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+      // Example: Navigate to the next screen after successful login
+      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'user-not-found') {
+        message = 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Wrong password provided for that user.';
+      } else if (e.code == 'invalid-email') {
+        message = 'The email address is not valid.';
+      } else if (e.code == 'empty-fields') {
+        message = e.message!;
+      } else {
+        message = 'An unexpected error occurred. Please try again.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -77,9 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Logging in...')));
+                    _logIn(); // Call the new log-in function
                   }
                 },
                 child: Text('Login', style: TextStyle(fontSize: 18)),

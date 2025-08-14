@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -31,6 +33,63 @@ class _SignUpPageState extends State<SignUpPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  // New function to handle user registration and data storage
+  Future<void> _signUp() async {
+    try {
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+        throw FirebaseAuthException(
+          code: 'empty-fields',
+          message: 'Email and password cannot be empty.',
+        );
+      }
+      // 1. Creates a new user with email and password
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+
+      // Get the user's unique ID (uid)
+      final String uid = userCredential.user!.uid;
+
+      // 2. Add the user's details to a new document in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'age': _ageController.text,
+        'receiveSuggestions': _receiveSuggestions,
+        'createdAt': FieldValue.serverTimestamp(), // Add a timestamp
+      });
+
+      // On success, show a success message and navigate to the login page
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign Up successful! Please log in.')),
+      );
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'weak-password') {
+        message = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'An account already exists for that email.';
+      } else if (e.code == 'invalid-email') {
+        message = 'The email address is not valid.';
+      } else if (e.code == 'empty-fields') {
+        message = e.message!;
+      } else {
+        message = 'An unexpected error occurred. Please try again.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -83,7 +142,7 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               SizedBox(height: 16),
 
-              // New Checkbox option
+              // Checkbox option
               CheckboxListTile(
                 title: Text(
                   'Would you like to receive suggestions on managing your finances properly?',
@@ -109,15 +168,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          _receiveSuggestions
-                              ? 'Processing Sign Up with suggestions enabled...'
-                              : 'Processing Sign Up...',
-                        ),
-                      ),
-                    );
+                    _signUp(); // Call the new sign-up function
                   }
                 },
                 child: Text('Sign Up', style: TextStyle(fontSize: 18)),
