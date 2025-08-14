@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'forgotpass.dart';
-import 'main_app_page.dart'; // Import the new page
+import 'main_app_page.dart';
+import 'change_password_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? emailLink;
+  const LoginPage({super.key, this.emailLink});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -12,10 +14,86 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.emailLink != null) {
+      _showEmailLinkDialog();
+    }
+  }
+
+  Future<void> _showEmailLinkDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Complete Sign-In'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter your email to complete the sign-in.'),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _completeEmailLinkSignIn(context);
+              },
+              child: const Text('Sign In'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _completeEmailLinkSignIn(BuildContext context) async {
+    Navigator.of(context).pop(); // Close the dialog
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Completing sign-in...')));
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailLink(
+        email: _emailController.text,
+        emailLink: widget.emailLink!,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign-in successful! Please set a new password.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'An unexpected error occurred: ${e.message}';
+      if (e.code == 'invalid-email') {
+        message = 'The email address is not valid.';
+      } else if (e.code == 'invalid-action-code') {
+        message = 'The sign-in link is invalid or expired.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -24,30 +102,21 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Corrected function to handle user login and navigation
   Future<void> _logIn() async {
     try {
-      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-        throw FirebaseAuthException(
-          code: 'empty-fields',
-          message: 'Email and password cannot be empty.',
+      if (_formKey.currentState!.validate()) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainAppPage()),
         );
       }
-      // Attempts to sign in with email and password
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      // On success, show a success message
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-
-      // Navigate to the next screen after successful login and replace the current route
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainAppPage()),
-      );
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'user-not-found') {
@@ -56,8 +125,6 @@ class _LoginPageState extends State<LoginPage> {
         message = 'Wrong password provided for that user.';
       } else if (e.code == 'invalid-email') {
         message = 'The email address is not valid.';
-      } else if (e.code == 'empty-fields') {
-        message = e.message!;
       } else {
         message = 'An unexpected error occurred. Please try again.';
       }
@@ -95,8 +162,6 @@ class _LoginPageState extends State<LoginPage> {
                 label: 'Password',
                 obscureText: true,
               ),
-
-              // Forgot Password link (centered)
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -116,7 +181,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -128,7 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _logIn(); // Call the corrected log-in function
+                    _logIn();
                   }
                 },
                 child: const Text('Login', style: TextStyle(fontSize: 18)),
