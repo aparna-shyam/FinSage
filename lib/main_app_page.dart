@@ -1,10 +1,10 @@
 // main_app_page.dart
 import 'package:flutter/material.dart';
-import 'package:finsage/services/categorization_service.dart';
 import 'package:finsage/services/news_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finsage/services/categorization_services.dart';
 
 class MainAppPage extends StatefulWidget {
   const MainAppPage({super.key});
@@ -151,53 +151,47 @@ class _MainAppPageState extends State<MainAppPage> {
                         ),
                       ),
                       const Divider(color: Color(0xFF6B5B95)),
-                      ..._financialNewsAndTips
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4.0,
-                              ),
-                              child: InkWell(
-                                onTap:
-                                    item['url'] != null &&
-                                        item['url']!.isNotEmpty
-                                    ? () => _launchUrl(item['url']!)
-                                    : null,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      size: 16,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        item['text']!,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          decoration: item['url']!.isNotEmpty
-                                              ? TextDecoration.underline
-                                              : TextDecoration.none,
-                                          color: item['url']!.isNotEmpty
-                                              ? Colors.blue[900]
-                                              : Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                      ..._financialNewsAndTips.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: InkWell(
+                            onTap:
+                                item['url'] != null && item['url']!.isNotEmpty
+                                ? () => _launchUrl(item['url']!)
+                                : null,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.green,
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    item['text']!,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      decoration: item['url']!.isNotEmpty
+                                          ? TextDecoration.underline
+                                          : TextDecoration.none,
+                                      color: item['url']!.isNotEmpty
+                                          ? Colors.blue[900]
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          )
-                          .toList(),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               if (_receiveSuggestions && _financialNewsAndTips.isNotEmpty)
                 const SizedBox(height: 20),
-
               if (_receiveSuggestions && _investmentSuggestions.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(16.0),
@@ -225,39 +219,33 @@ class _MainAppPageState extends State<MainAppPage> {
                         ),
                       ),
                       const Divider(color: Color(0xFF6B5B95)),
-                      ..._investmentSuggestions
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4.0,
+                      ..._investmentSuggestions.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.trending_up,
+                                size: 16,
+                                color: Colors.blue,
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.trending_up,
-                                    size: 16,
-                                    color: Colors.blue,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      item,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  item,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
               if (_receiveSuggestions && _investmentSuggestions.isNotEmpty)
                 const SizedBox(height: 20),
-
               const Text(
                 'Enter your expense to categorize:',
                 style: TextStyle(fontSize: 18),
