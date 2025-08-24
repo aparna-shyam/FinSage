@@ -153,9 +153,11 @@ class _MainAppPageState extends State<MainAppPage> {
         debugPrint('Categorization error: $e');
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -187,6 +189,10 @@ class _MainAppPageState extends State<MainAppPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final cardColor = isDarkMode ? Colors.grey[850] : null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('FinSage Dashboard'),
@@ -200,21 +206,21 @@ class _MainAppPageState extends State<MainAppPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildCategorizationSection(),
+              _buildCategorizationSection(textColor),
               const SizedBox(height: 20),
               if (_receiveSuggestions && _financialNewsAndTips.isNotEmpty)
-                _buildNewsAndTipsCard(),
+                _buildNewsAndTipsCard(textColor, cardColor),
               if (_receiveSuggestions &&
                   _financialNewsAndTips.isNotEmpty &&
                   _investmentSuggestions.isNotEmpty)
                 const SizedBox(height: 20),
               if (_receiveSuggestions && _investmentSuggestions.isNotEmpty)
-                _buildInvestmentSuggestionsCard(),
+                _buildInvestmentSuggestionsCard(textColor, cardColor),
               if (_transactionHistory.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                _buildSpendingSummarySection(),
+                _buildSpendingSummarySection(textColor, cardColor),
                 const SizedBox(height: 20),
-                _buildTransactionHistorySection(),
+                _buildTransactionHistorySection(textColor, cardColor),
               ],
             ],
           ),
@@ -223,16 +229,17 @@ class _MainAppPageState extends State<MainAppPage> {
     );
   }
 
-  // The rest of the build methods remain the same, but with new UI details.
-
-  Widget _buildNewsAndTipsCard() {
+  Widget _buildNewsAndTipsCard(Color textColor, Color? cardColor) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade100, Colors.lightGreen.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cardColor, // Use a single color for dark mode
+        gradient: cardColor == null
+            ? LinearGradient(
+                colors: [Colors.green.shade100, Colors.lightGreen.shade50],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
@@ -252,21 +259,21 @@ class _MainAppPageState extends State<MainAppPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.lightbulb, color: Colors.green, size: 24),
-                  SizedBox(width: 8),
+                  Icon(Icons.lightbulb, color: textColor, size: 24),
+                  const SizedBox(width: 8),
                   Text(
                     'Financial Insights',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF6B5B95),
+                      color: textColor,
                     ),
                   ),
                 ],
               ),
-              const Divider(color: Color(0xFF6B5B95), height: 20),
+              Divider(color: textColor, height: 20),
               ..._financialNewsAndTips.map(
                 (item) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -277,7 +284,7 @@ class _MainAppPageState extends State<MainAppPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.star, size: 16, color: Colors.green),
+                        Icon(Icons.star, size: 16, color: textColor),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -287,9 +294,7 @@ class _MainAppPageState extends State<MainAppPage> {
                               decoration: item['url']!.isNotEmpty
                                   ? TextDecoration.underline
                                   : TextDecoration.none,
-                              color: item['url']!.isNotEmpty
-                                  ? Colors.blue[900]
-                                  : Colors.black,
+                              color: textColor,
                             ),
                           ),
                         ),
@@ -305,14 +310,17 @@ class _MainAppPageState extends State<MainAppPage> {
     );
   }
 
-  Widget _buildInvestmentSuggestionsCard() {
+  Widget _buildInvestmentSuggestionsCard(Color textColor, Color? cardColor) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade100, Colors.blue.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cardColor, // Use a single color for dark mode
+        gradient: cardColor == null
+            ? LinearGradient(
+                colors: [Colors.blue.shade100, Colors.blue.shade50],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
@@ -332,35 +340,34 @@ class _MainAppPageState extends State<MainAppPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.trending_up, color: Colors.blue, size: 24),
-                  SizedBox(width: 8),
+                  Icon(Icons.trending_up, color: textColor, size: 24),
+                  const SizedBox(width: 8),
                   Text(
                     'Investment Suggestions',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF6B5B95),
+                      color: textColor,
                     ),
                   ),
                 ],
               ),
-              const Divider(color: Color(0xFF6B5B95), height: 20),
+              Divider(color: textColor, height: 20),
               ..._investmentSuggestions.map(
                 (item) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.arrow_right,
-                        size: 16,
-                        color: Colors.blue,
-                      ),
+                      Icon(Icons.arrow_right, size: 16, color: textColor),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(item, style: const TextStyle(fontSize: 14)),
+                        child: Text(
+                          item,
+                          style: TextStyle(fontSize: 14, color: textColor),
+                        ),
                       ),
                     ],
                   ),
@@ -373,7 +380,7 @@ class _MainAppPageState extends State<MainAppPage> {
     );
   }
 
-  Widget _buildCategorizationSection() {
+  Widget _buildCategorizationSection(Color textColor) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -381,9 +388,13 @@ class _MainAppPageState extends State<MainAppPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
+            Text(
               'Enter your expense to categorize:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
@@ -395,8 +406,10 @@ class _MainAppPageState extends State<MainAppPage> {
                 ),
                 labelText:
                     'Expense description (e.g., "Coffee at Starbucks for \$5")',
-                prefixIcon: const Icon(Icons.shopping_cart),
+                prefixIcon: Icon(Icons.shopping_cart, color: textColor),
+                labelStyle: TextStyle(color: textColor),
               ),
+              style: TextStyle(color: textColor),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -422,10 +435,10 @@ class _MainAppPageState extends State<MainAppPage> {
               const SizedBox(height: 20),
               Text(
                 _categorizedResult,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF6B5B95),
+                  color: textColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -436,20 +449,25 @@ class _MainAppPageState extends State<MainAppPage> {
     );
   }
 
-  Widget _buildSpendingSummarySection() {
+  Widget _buildSpendingSummarySection(Color textColor, Color? cardColor) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      color: cardColor,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Spending Summary',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
-            const Divider(),
+            Divider(color: textColor),
             const SizedBox(height: 10),
             ..._spendingSummary.entries.map((entry) {
               return Padding(
@@ -457,10 +475,16 @@ class _MainAppPageState extends State<MainAppPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(entry.key, style: const TextStyle(fontSize: 16)),
+                    Text(
+                      entry.key,
+                      style: TextStyle(fontSize: 16, color: textColor),
+                    ),
                     Text(
                       '\$${entry.value.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                   ],
                 ),
@@ -472,20 +496,25 @@ class _MainAppPageState extends State<MainAppPage> {
     );
   }
 
-  Widget _buildTransactionHistorySection() {
+  Widget _buildTransactionHistorySection(Color textColor, Color? cardColor) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      color: cardColor,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Recent Transactions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
-            const Divider(),
+            Divider(color: textColor),
             const SizedBox(height: 10),
             ..._transactionHistory.map((transaction) {
               final description = transaction['description'] ?? 'N/A';
@@ -496,7 +525,7 @@ class _MainAppPageState extends State<MainAppPage> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
                   children: [
-                    const Icon(Icons.history, color: Colors.grey),
+                    Icon(Icons.history, color: textColor),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -504,26 +533,25 @@ class _MainAppPageState extends State<MainAppPage> {
                         children: [
                           Text(
                             description,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: textColor,
                             ),
                           ),
                           Text(
                             'Category: $category',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: textColor),
                           ),
                         ],
                       ),
                     ),
                     Text(
                       '\$$amount',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: textColor,
                       ),
                     ),
                   ],

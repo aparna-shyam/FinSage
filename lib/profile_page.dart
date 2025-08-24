@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'change_password_page.dart';
+import 'theme_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -151,7 +154,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   child: CircleAvatar(
                     radius: 40,
-                    // Use AssetImage to load from assets
                     backgroundImage: AssetImage(_avatarPaths[index]),
                   ),
                 );
@@ -171,6 +173,87 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _updateSuggestionsPreference(bool value) async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_user!.uid)
+          .update({'receiveSuggestions': value});
+      if (mounted) {
+        setState(() {
+          _userData?['receiveSuggestions'] = value;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating preference: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showSettingsDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateInDialog) {
+            return AlertDialog(
+              title: const Text('Settings'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text('Receive Financial Suggestions'),
+                    value: _userData?['receiveSuggestions'] ?? false,
+                    onChanged: (bool value) {
+                      setStateInDialog(() {
+                        _userData?['receiveSuggestions'] = value;
+                      });
+                      _updateSuggestionsPreference(value);
+                    },
+                  ),
+                  SwitchListTile(
+                    title: const Text('Theme Mode (Dark/Light)'),
+                    value: themeProvider.themeMode == ThemeMode.dark,
+                    onChanged: (bool value) {
+                      themeProvider.toggleTheme();
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Change Password'),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.pushNamed(context, '/change-password');
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,6 +261,12 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text('My Profile'),
         backgroundColor: const Color(0xFF6B5B95),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showSettingsDialog,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -195,7 +284,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           CircleAvatar(
                             radius: 60,
                             backgroundColor: Colors.grey[200],
-                            // Check if the URL is an asset path or a network URL
                             backgroundImage:
                                 _userData?['profilePictureUrl'] != null &&
                                     _userData!['profilePictureUrl'].startsWith(
