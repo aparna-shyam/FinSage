@@ -13,8 +13,8 @@ print("Dataset loaded successfully!")
 print(df.head())
 print("Columns:", df.columns.tolist())
 
-# Combine title and description into a single text field
-df["text"] = df["title"].fillna("") + " " + df["description"].fillna("")
+df["text"] = df["description"].fillna("")
+df["categories"] = df["categories"].fillna("")
 
 # Features (X) and Labels (y)
 X = df["text"]
