@@ -16,6 +16,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
 
+  // A list of predefined image paths from the assets folder.
+  final List<String> _avatarPaths = [
+    'assets/images/avatar1.jpeg',
+    'assets/images/avatar2.jpeg',
+    'assets/images/avatar3.jpeg',
+    'assets/images/avatar4.jpeg',
+    'assets/images/avatar5.jpeg',
+    'assets/images/avatar6.jpeg',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -31,21 +41,33 @@ class _ProfilePageState extends State<ProfilePage> {
             .doc(_user!.uid)
             .get();
         if (userDoc.exists) {
-          setState(() {
-            _userData = userDoc.data() as Map<String, dynamic>;
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _userData = userDoc.data() as Map<String, dynamic>;
+              _isLoading = false;
+            });
+          }
+        } else {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }
       } catch (e) {
         debugPrint('Error fetching user data: $e');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -53,7 +75,6 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await _auth.signOut();
       if (mounted) {
-        // Navigate back to the login page after sign-out.
         Navigator.of(context).pushReplacementNamed('/login');
       }
     } catch (e) {
@@ -64,13 +85,98 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _updateProfilePicture(String url) async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
+    try {
+      if (_user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_user!.uid)
+            .update({'profilePictureUrl': url});
+
+        if (mounted) {
+          setState(() {
+            _userData?['profilePictureUrl'] = url;
+          });
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully!'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error updating profile picture: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update profile picture.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showAvatarSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select a Profile Picture'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: _avatarPaths.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    _updateProfilePicture(_avatarPaths[index]);
+                    Navigator.of(context).pop();
+                  },
+                  child: CircleAvatar(
+                    radius: 40,
+                    // Use AssetImage to load from assets
+                    backgroundImage: AssetImage(_avatarPaths[index]),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: const Color(0xFF6B5B95),
-        // Remove the back button
         automaticallyImplyLeading: false,
       ),
       body: _isLoading
@@ -80,18 +186,63 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey[200],
-                      child: const Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.grey,
+                  GestureDetector(
+                    onTap: _showAvatarSelectionDialog,
+                    child: Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey[200],
+                            // Check if the URL is an asset path or a network URL
+                            backgroundImage:
+                                _userData?['profilePictureUrl'] != null &&
+                                    _userData!['profilePictureUrl'].startsWith(
+                                      'assets/',
+                                    )
+                                ? AssetImage(_userData!['profilePictureUrl'])
+                                      as ImageProvider
+                                : (_userData?['profilePictureUrl'] != null
+                                      ? NetworkImage(
+                                          _userData!['profilePictureUrl'],
+                                        )
+                                      : null),
+                            child: _userData?['profilePictureUrl'] == null
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 70,
+                                    color: Colors.grey,
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6B5B95),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
                   Text(
                     'Name: ${_userData?['name'] ?? 'N/A'}',
                     style: const TextStyle(

@@ -26,11 +26,11 @@ class _MainAppPageState extends State<MainAppPage> {
   @override
   void initState() {
     super.initState();
-    _fetchUserPreferenceAndNewsAndSuggestions();
-    _fetchTransactionHistory();
+    _refreshData();
   }
 
-  Future<void> _fetchUserPreferenceAndNewsAndSuggestions() async {
+  // New method to handle all data fetching
+  Future<void> _refreshData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final userDoc = await FirebaseFirestore.instance
@@ -50,6 +50,7 @@ class _MainAppPageState extends State<MainAppPage> {
         }
       }
     }
+    _fetchTransactionHistory();
   }
 
   Future<void> _fetchFinancialNewsAndTips() async {
@@ -144,7 +145,7 @@ class _MainAppPageState extends State<MainAppPage> {
           _categorizedResult = 'Category: $category';
         });
       }
-      _fetchTransactionHistory();
+      _refreshData(); // Refresh data after a new transaction
       _transactionController.clear();
     } catch (e) {
       setState(() {
@@ -199,7 +200,7 @@ class _MainAppPageState extends State<MainAppPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildCategorizationSection(), // Moved to the top
+              _buildCategorizationSection(),
               const SizedBox(height: 20),
               if (_receiveSuggestions && _financialNewsAndTips.isNotEmpty)
                 _buildNewsAndTipsCard(),

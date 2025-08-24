@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: 1.0.8
   flutter_dotenv: ^5.2.1
   url_launcher: 6.3.2
+  image_picker: ^1.1.2 # To pick images from the device gallery/camera
+  firebase_storage: 13.0.0
 
 
 dev_dependencies:
@@ -63,6 +65,7 @@ flutter:
   
   assets:
     - .env
+    - assets/images/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

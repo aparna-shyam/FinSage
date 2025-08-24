@@ -1,8 +1,8 @@
 // login_page.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main_app_page.dart';
-import 'forgotpass.dart'; // Import the new forgot password page
+import 'home_wrapper.dart'; // Import HomeWrapper
+import 'forgotpass.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,9 +29,10 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text,
       );
       if (mounted) {
+        // Navigate to HomeWrapper instead of MainAppPage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainAppPage()),
+          MaterialPageRoute(builder: (context) => const HomeWrapper()),
         );
       }
     } on FirebaseAuthException catch (e) {
