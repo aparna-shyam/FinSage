@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'change_password_page.dart';
 import 'theme_provider.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -21,12 +20,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // A list of predefined image paths from the assets folder.
   final List<String> _avatarPaths = [
-    'assets/images/avatar1.jpeg',
-    'assets/images/avatar2.jpeg',
-    'assets/images/avatar3.jpeg',
-    'assets/images/avatar4.jpeg',
-    'assets/images/avatar5.jpeg',
-    'assets/images/avatar6.jpeg',
+    'assets/avatars/avatar1.jpeg',
+    'assets/avatars/avatar2.jpeg',
+    'assets/avatars/avatar3.jpeg',
+    'assets/avatars/avatar4.jpeg',
+    'assets/avatars/avatar5.jpeg',
+    'assets/avatars/avatar6.jpeg',
   ];
 
   @override
