@@ -1,13 +1,14 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart'; // Add provider package
+import 'package:provider/provider.dart';
 import 'home_page.dart';
 import 'home_wrapper.dart';
 import 'change_password_page.dart';
 import 'firebase_options.dart';
-import 'theme_provider.dart'; // Import the new theme provider
+import 'theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
