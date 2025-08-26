@@ -67,7 +67,7 @@ class CategorySelectionPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose Category'),
+        title: const Text('Choose a Spending Category'),
         backgroundColor: const Color(0xFF6B5B95),
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -78,7 +78,7 @@ class CategorySelectionPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Browse by Category',
+              'Choose a Spending Category',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).textTheme.bodyLarge?.color,

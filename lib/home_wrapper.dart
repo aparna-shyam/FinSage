@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:finsage/main_app_page.dart';
 import 'package:finsage/profile_page.dart';
-import 'package:finsage/insights_page.dart'; // Import the new InsightsPage
-import 'package:finsage/category_selection_page.dart'; // Import the new Category Selection page
+import 'package:finsage/insights_page.dart';
+import 'package:finsage/category_selection_page.dart';
 
 class HomeWrapper extends StatefulWidget {
   const HomeWrapper({super.key});
@@ -16,9 +16,9 @@ class _HomeWrapperState extends State<HomeWrapper> {
   int _selectedIndex = 0;
 
   static final List<Widget> _widgetOptions = <Widget>[
-    const CategorySelectionPage(), // New landing page for categories
-    const MainAppPage(), // Now the transactions page
-    const InsightsPage(), // For news and suggestions
+    const CategorySelectionPage(),
+    const MainAppPage(),
+    const InsightsPage(),
     const ProfilePage(),
   ];
 
@@ -34,7 +34,11 @@ class _HomeWrapperState extends State<HomeWrapper> {
       body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Shop'),
+          // Changed "Shop" to "Expenses" and updated the icon
+          BottomNavigationBarItem(
+            icon: Icon(Icons.attach_money),
+            label: 'Expenses',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long),
             label: 'Transactions',
@@ -47,9 +51,8 @@ class _HomeWrapperState extends State<HomeWrapper> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFF6B5B95),
-        unselectedItemColor:
-            Colors.grey, // Add unselected color for better visibility
-        showUnselectedLabels: true, // Show labels for all items
+        unselectedItemColor: Colors.grey,
+        showUnselectedLabels: true,
         onTap: _onItemTapped,
       ),
     );

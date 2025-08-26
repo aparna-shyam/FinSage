@@ -12,180 +12,291 @@ class ItemSelectionPage extends StatefulWidget {
 }
 
 class _ItemSelectionPageState extends State<ItemSelectionPage> {
-  // Dummy data for each category. In a real app, this would be fetched from a database.
+  // Dummy data for each category. Using local assets for reliable loading.
   final Map<String, List<Map<String, dynamic>>> _items = {
     'Grocery': [
+      {'name': 'Milk', 'image': 'assets/images/milk.jpg'},
+      {'name': 'Bread', 'image': 'assets/images/bread.jpg'},
+      {'name': 'Eggs', 'image': 'assets/images/eggs.jpg'},
+      {'name': 'Fruits', 'image': 'assets/images/fruits.jpg'},
+      {'name': 'Vegetables', 'image': 'assets/images/vegetables.jpg'},
+      {'name': 'Cheese', 'image': 'assets/images/cheese.jpg'},
+      {'name': 'Yogurt', 'image': 'assets/images/yogurt.jpg'},
+      {'name': 'Chicken', 'image': 'assets/images/chicken.jpg'},
+      {'name': 'Fish', 'image': 'assets/images/fish.jpg'},
+      {'name': 'Rice', 'image': 'assets/images/rice.jpg'},
+      {'name': 'Pasta', 'image': 'assets/images/pasta.jpg'},
+      {'name': 'Cereal', 'image': 'assets/images/cereal.jpg'},
+      {'name': 'Snacks', 'image': 'assets/images/snacks.jpg'},
+      {'name': 'Frozen Foods', 'image': 'assets/images/frozen_foods.jpg'},
+      {'name': 'Beverages', 'image': 'assets/images/beverages.jpg'},
+      {'name': 'Condiments', 'image': 'assets/images/condiments.jpg'},
+      {'name': 'Spices', 'image': 'assets/images/spices.jpg'},
+      {'name': 'Oils', 'image': 'assets/images/oils.jpg'},
+      {'name': 'Baking Supplies', 'image': 'assets/images/baking_supplies.jpg'},
+      {'name': 'Canned Goods', 'image': 'assets/images/canned_goods.jpg'},
+      {'name': 'Dairy Products', 'image': 'assets/images/dairy_products.jpg'},
+      {'name': 'Meat', 'image': 'assets/images/meat.jpg'},
+      {'name': 'Seafood', 'image': 'assets/images/seafood.jpg'},
+      {'name': 'Bread & Bakery', 'image': 'assets/images/bread_bakery.jpg'},
+      {'name': 'Breakfast Foods', 'image': 'assets/images/breakfast_foods.jpg'},
       {
-        'name': 'Milk',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Milk',
+        'name': 'Sweets & Desserts',
+        'image': 'assets/images/sweets_desserts.jpg',
       },
+      {'name': 'Health Foods', 'image': 'assets/images/health_foods.jpg'},
+      {'name': 'Organic Foods', 'image': 'assets/images/organic_foods.jpg'},
       {
-        'name': 'Bread',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Bread',
+        'name': 'International Foods',
+        'image': 'assets/images/international_foods.jpg',
       },
-      {
-        'name': 'Eggs',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Eggs',
-      },
+      {'name': 'Baby Products', 'image': 'assets/images/baby_products.jpg'},
+      {'name': 'Pet Supplies', 'image': 'assets/images/pet_supplies.jpg'},
     ],
     'Medicines': [
+      {'name': 'Painkillers', 'image': 'assets/images/painkillers.jpg'},
+      {'name': 'Band-Aids', 'image': 'assets/images/bandaids.jpg'},
+      {'name': 'Cough Syrup', 'image': 'assets/images/cough_syrup.jpg'},
+      {'name': 'Vitamins', 'image': 'assets/images/vitamins.jpg'},
+      {'name': 'Antibiotics', 'image': 'assets/images/antibiotics.jpg'},
       {
-        'name': 'Painkillers',
-        'image': 'https://placehold.co/150x150/fbe9e7/000?text=Pills',
+        'name': 'Allergy Medicine',
+        'image': 'assets/images/allergy_medicine.jpg',
+      },
+      {'name': 'Cold Medicine', 'image': 'assets/images/cold_medicine.jpg'},
+      {'name': 'Digestive Aid', 'image': 'assets/images/digestive_aid.jpg'},
+      {'name': 'First Aid Kit', 'image': 'assets/images/first_aid_kit.jpg'},
+      {'name': 'Thermometer', 'image': 'assets/images/thermometer.jpg'},
+      {
+        'name': 'Prescription Glasses',
+        'image': 'assets/images/prescription_glasses.jpg',
+      },
+      {'name': 'Contact Lenses', 'image': 'assets/images/contact_lenses.jpg'},
+      {'name': 'Eye Drops', 'image': 'assets/images/eye_drops.jpg'},
+      {'name': 'Ear Drops', 'image': 'assets/images/ear_drops.jpg'},
+      {'name': 'Nasal Spray', 'image': 'assets/images/nasal_spray.jpg'},
+      {
+        'name': 'Antiseptic Cream',
+        'image': 'assets/images/antiseptic_cream.jpg',
       },
       {
-        'name': 'Band-Aids',
-        'image': 'https://placehold.co/150x150/fbe9e7/000?text=Band-Aids',
+        'name': 'Hydrocortisone Cream',
+        'image': 'assets/images/hydrocortisone_cream.jpg',
       },
       {
-        'name': 'Cough Syrup',
-        'image': 'https://placehold.co/150x150/fbe9e7/000?text=Syrup',
+        'name': 'Insect Repellent',
+        'image': 'assets/images/insect_repellent.jpg',
       },
+      {'name': 'Sunscreen', 'image': 'assets/images/sunscreen.jpg'},
     ],
     'Food': [
-      {
-        'name': 'Burger',
-        'image': 'https://placehold.co/150x150/fff3e0/000?text=Burger',
-      },
-      {
-        'name': 'Pizza',
-        'image': 'https://placehold.co/150x150/fff3e0/000?text=Pizza',
-      },
-      {
-        'name': 'Sushi',
-        'image': 'https://placehold.co/150x150/fff3e0/000?text=Sushi',
-      },
+      {'name': 'Idli', 'image': 'assets/images/idli.jpg'},
+      {'name': 'Upma', 'image': 'assets/images/upma.jpg'},
+      {'name': 'Dosa', 'image': 'assets/images/dosa.jpg'},
+      {'name': 'Burger', 'image': 'assets/images/burger.png'},
+      {'name': 'Pizza', 'image': 'assets/images/pizza.jpg'},
+      {'name': 'Sushi', 'image': 'assets/images/sushi.jpg'},
+      {'name': 'Pasta', 'image': 'assets/images/pasta.jpg'},
+      {'name': 'Salad', 'image': 'assets/images/salad.jpg'},
+      {'name': 'Steak', 'image': 'assets/images/steak.jpg'},
+      {'name': 'Tacos', 'image': 'assets/images/tacos.jpg'},
+      {'name': 'Ice Cream', 'image': 'assets/images/ice_cream.png'},
+      {'name': 'Sandwich', 'image': 'assets/images/sandwich.jpg'},
+      {'name': 'Soup', 'image': 'assets/images/soup.jpg'},
+      {'name': 'Fries', 'image': 'assets/images/fries.jpg'},
+      {'name': 'Dumplings', 'image': 'assets/images/dumplings.jpg'},
+      {'name': 'Biriyani', 'image': 'assets/images/biriyani.jpg'},
+      {'name': 'Mandi', 'image': 'assets/images/mandi.jpg'},
+      {'name': 'Chicken Curry', 'image': 'assets/images/chicken_curry.jpg'},
+      {'name': 'Noodles', 'image': 'assets/images/noodles.jpg'},
+      {'name': 'BBQ', 'image': 'assets/images/bbq.jpg'},
+      {'name': 'Seafood', 'image': 'assets/images/seafood.jpg'},
+      {'name': 'Dessert', 'image': 'assets/images/dessert.jpg'},
     ],
     'Drinks': [
-      {
-        'name': 'Soda',
-        'image': 'https://placehold.co/150x150/e3f2fd/000?text=Soda',
-      },
-      {
-        'name': 'Coffee',
-        'image': 'https://placehold.co/150x150/e3f2fd/000?text=Coffee',
-      },
-      {
-        'name': 'Juice',
-        'image': 'https://placehold.co/150x150/e3f2fd/000?text=Juice',
-      },
+      {'name': 'Soda', 'image': 'assets/images/soda.jpg'},
+      {'name': 'Coffee', 'image': 'assets/images/coffee.jpg'},
+      {'name': 'Juice', 'image': 'assets/images/juice.jpg'},
+      {'name': 'Tea', 'image': 'assets/images/tea.jpg'},
+      {'name': 'Milkshakes', 'image': 'assets/images/milkshakes.jpg'},
+      {'name': 'Energy Drinks', 'image': 'assets/images/energydrinks.png'},
+      {'name': 'Water', 'image': 'assets/images/water.jpg'},
+      {'name': 'Soft Drinks', 'image': 'assets/images/softdrinks.jpg'},
     ],
-    'Bill Payments': [
-      {
-        'name': 'Electricity Bill',
-        'image': 'https://placehold.co/150x150/e1f5fe/000?text=Electricity',
-      },
-      {
-        'name': 'Phone Bill',
-        'image': 'https://placehold.co/150x150/e1f5fe/000?text=Phone',
-      },
-      {
-        'name': 'Water Bill',
-        'image': 'https://placehold.co/150x150/e1f5fe/000?text=Water',
-      },
-    ],
+    'Bill Payments': [],
     'Apparel': [
-      {
-        'name': 'Shirt',
-        'image': 'https://placehold.co/150x150/f8bbd0/000?text=Shirt',
-      },
-      {
-        'name': 'T-Shirt',
-        'image': 'https://placehold.co/150x150/f8bbd0/000?text=T-Shirt',
-      },
-      {
-        'name': 'Skirt',
-        'image': 'https://placehold.co/150x150/f8bbd0/000?text=Skirt',
-      },
-      {
-        'name': 'Blouse',
-        'image': 'https://placehold.co/150x150/f8bbd0/000?text=Blouse',
-      },
-      {
-        'name': 'Pants',
-        'image': 'https://placehold.co/150x150/f8bbd0/000?text=Pants',
-      },
+      {'name': 'Shirt', 'image': 'assets/images/shirt.jpg'},
+      {'name': 'T-Shirt', 'image': 'assets/images/t-shirt.jpg'},
+      {'name': 'Skirt', 'image': 'assets/images/skirt.jpg'},
+      {'name': 'Blouse', 'image': 'assets/images/blouse.jpg'},
+      {'name': 'Pants', 'image': 'assets/images/pants.jpg'},
+      {'name': 'Jeans', 'image': 'assets/images/jeans.jpg'},
+      {'name': 'Shorts', 'image': 'assets/images/shorts.png'},
+      {'name': 'Varsity Jacket', 'image': 'assets/images/varsity.jpg'},
+      {'name': 'Jacket', 'image': 'assets/images/jacket.jpg'},
+      {'name': 'Coat', 'image': 'assets/images/coat.jpg'},
+      {'name': 'Sweater', 'image': 'assets/images/sweater.jpg'},
+      {'name': 'Hoodie', 'image': 'assets/images/hoodie.jpg'},
+      {'name': 'Suit', 'image': 'assets/images/suit.jpg'},
+      {'name': 'Tie', 'image': 'assets/images/tie.jpg'},
+      {'name': 'Scarf', 'image': 'assets/images/scarf.jpg'},
+      {'name': 'Gloves', 'image': 'assets/images/gloves.jpg'},
+      {'name': 'Hat', 'image': 'assets/images/hat.jpg'},
+      {'name': 'Belt', 'image': 'assets/images/belt.jpg'},
+      {'name': 'Socks', 'image': 'assets/images/socks.png'},
+      {'name': 'Shoes', 'image': 'assets/images/shoes.jpg'},
+      {'name': 'Sneakers', 'image': 'assets/images/sneakers.jpg'},
+      {'name': 'Boots', 'image': 'assets/images/boots.jpg'},
+      {'name': 'Sandals', 'image': 'assets/images/sandals.jpg'},
+      {'name': 'Slippers', 'image': 'assets/images/slippers.jpg'},
+      {'name': 'Sleepwear', 'image': 'assets/images/sleepwear.png'},
+      {'name': 'Accessories', 'image': 'assets/images/accessories.jpg'},
+      {'name': 'Jewelry', 'image': 'assets/images/jewelry.jpg'},
     ],
     'Electronics': [
+      {'name': 'Smartphone', 'image': 'assets/images/smartphone.jpg'},
+      {'name': 'Headphones', 'image': 'assets/images/headphones.jpg'},
+      {'name': 'Laptop', 'image': 'assets/images/laptop.jpg'},
+      {'name': 'Smartwatch', 'image': 'assets/images/smartwatch.jpg'},
+      {'name': 'Tablet', 'image': 'assets/images/tablet.jpg'},
+      {'name': 'Camera', 'image': 'assets/images/camera.jpg'},
+      {'name': 'Speaker', 'image': 'assets/images/speaker.png'},
+      {'name': 'Monitor', 'image': 'assets/images/monitor.jpg'},
+      {'name': 'Keyboard', 'image': 'assets/images/keyboard.jpg'},
+      {'name': 'Mouse', 'image': 'assets/images/mouse.jpg'},
+      {'name': 'Printer', 'image': 'assets/images/printer.jpg'},
+      {'name': 'Scanner', 'image': 'assets/images/scanner.jpg'},
+      {'name': 'TV Remote', 'image': 'assets/images/tv_remote.jpg'},
+      {'name': 'Projector', 'image': 'assets/images/projector.jpg'},
+      {'name': 'Game Controller', 'image': 'assets/images/game_controller.jpg'},
+      {'name': 'Charger', 'image': 'assets/images/charger.jpg'},
+      {'name': 'USB Cable', 'image': 'assets/images/usb_cable.jpg'},
+      {'name': 'Power Bank', 'image': 'assets/images/power_bank.jpg'},
       {
-        'name': 'Smartphone',
-        'image': 'https://placehold.co/150x150/b2ebf2/000?text=Phone',
+        'name': 'External Hard Drive',
+        'image': 'assets/images/external_hard_drive.jpg',
       },
+      {'name': 'Router', 'image': 'assets/images/router.jpg'},
       {
-        'name': 'Headphones',
-        'image': 'https://placehold.co/150x150/b2ebf2/000?text=Headphones',
+        'name': 'Smart Home Device',
+        'image': 'assets/images/smart_home_device.jpg',
       },
-      {
-        'name': 'Laptop',
-        'image': 'https://placehold.co/150x150/b2ebf2/000?text=Laptop',
-      },
+      {'name': 'TV', 'image': 'assets/images/tv.jpg'},
+      {'name': 'Drone', 'image': 'assets/images/drone.jpg'},
+      {'name': 'Fitness Tracker', 'image': 'assets/images/fitness_tracker.jpg'},
     ],
     'Cosmetics': [
-      {
-        'name': 'Lipstick',
-        'image': 'https://placehold.co/150x150/d7ccc8/000?text=Lipstick',
-      },
-      {
-        'name': 'Mascara',
-        'image': 'https://placehold.co/150x150/d7ccc8/000?text=Mascara',
-      },
-      {
-        'name': 'Foundation',
-        'image': 'https://placehold.co/150x150/d7ccc8/000?text=Foundation',
-      },
+      {'name': 'Lipstick', 'image': 'assets/images/lipstick.jpg'},
+      {'name': 'Mascara', 'image': 'assets/images/mascara.jpg'},
+      {'name': 'Foundation', 'image': 'assets/images/foundation.jpg'},
+      {'name': 'Lip Balm', 'image': 'assets/images/lip_balm.jpg'},
+      {'name': 'Nail Polish', 'image': 'assets/images/nail_polish.jpg'},
+      {'name': 'Blush', 'image': 'assets/images/blush.jpg'},
+      {'name': 'Eyeshadow', 'image': 'assets/images/eyeshadow.jpg'},
+      {'name': 'Eyeliner', 'image': 'assets/images/eyeliner.jpg'},
+      {'name': 'Concealer', 'image': 'assets/images/concealer.jpg'},
+      {'name': 'Makeup Remover', 'image': 'assets/images/makeup_remover.jpg'},
+      {'name': 'Face Wash', 'image': 'assets/images/face_wash.jpg'},
+      {'name': 'Moisturizer', 'image': 'assets/images/moisturizer.jpg'},
+      {'name': 'Sunscreen', 'image': 'assets/images/sunscreen.jpg'},
+      {'name': 'Perfume', 'image': 'assets/images/perfume.jpg'},
+      {'name': 'Body Lotion', 'image': 'assets/images/body_lotion.png'},
+      {'name': 'Hair Spray', 'image': 'assets/images/hair_spray.jpg'},
+      {'name': 'Comb', 'image': 'assets/images/comb.jpg'},
+      {'name': 'Brush', 'image': 'assets/images/brush.jpg'},
+      {'name': 'Shampoo', 'image': 'assets/images/shampoo.jpg'},
+      {'name': 'Conditioner', 'image': 'assets/images/conditioner.jpg'},
+      {'name': 'Hair Gel', 'image': 'assets/images/hair_gel.png'},
+      {'name': 'Deodorant', 'image': 'assets/images/deodorant.png'},
     ],
     'Sports': [
+      {'name': 'Basketball', 'image': 'assets/images/basketball.jpg'},
+      {'name': 'Running Shoes', 'image': 'assets/images/running_shoes.jpg'},
+      {'name': 'Yoga Mat', 'image': 'assets/images/yoga_mat.jpg'},
+      {'name': 'Tennis Racket', 'image': 'assets/images/tennis_racket.jpg'},
+      {'name': 'Football', 'image': 'assets/images/football.jpg'},
+      {'name': 'Cycling Helmet', 'image': 'assets/images/cycling_helmet.jpg'},
+      {'name': 'Swimwear', 'image': 'assets/images/swimwear.jpg'},
+      {'name': 'Dumbbells', 'image': 'assets/images/dumbbells.jpg'},
+      {'name': 'Jump Rope', 'image': 'assets/images/jump_rope.jpg'},
       {
-        'name': 'Basketball',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Ball',
+        'name': 'Fitness Tracker',
+        'image': 'assets/images/fitness_tracker_sports.jpg',
       },
-      {
-        'name': 'Running Shoes',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Shoes',
-      },
-      {
-        'name': 'Yoga Mat',
-        'image': 'https://placehold.co/150x150/e8f5e9/000?text=Yoga',
-      },
+      {'name': 'Golf Clubs', 'image': 'assets/images/golf_clubs.jpg'},
+      {'name': 'Baseball Glove', 'image': 'assets/images/baseball_glove.jpg'},
+      {'name': 'Hiking Boots', 'image': 'assets/images/hiking_boots.jpg'},
+      {'name': 'Ski Goggles', 'image': 'assets/images/ski_goggles.jpg'},
+      {'name': 'Boxing Gloves', 'image': 'assets/images/boxing_gloves.jpg'},
+      {'name': 'Skateboard', 'image': 'assets/images/skateboard.jpg'},
+      {'name': 'Surfboard', 'image': 'assets/images/surfboard.jpg'},
+      {'name': 'Treadmill', 'image': 'assets/images/treadmill.jpg'},
+      {'name': 'Exercise Bike', 'image': 'assets/images/exercise_bike.jpg'},
+      {'name': 'Rowing Machine', 'image': 'assets/images/rowing_machine.jpg'},
     ],
     'Stationary': [
-      {
-        'name': 'Notebook',
-        'image': 'https://placehold.co/150x150/c5e1a5/000?text=Notebook',
-      },
-      {
-        'name': 'Pen Set',
-        'image': 'https://placehold.co/150x150/c5e1a5/000?text=Pens',
-      },
-      {
-        'name': 'Highlighters',
-        'image': 'https://placehold.co/150x150/c5e1a5/000?text=Markers',
-      },
+      {'name': 'Notebook', 'image': 'assets/images/notebook.jpg'},
+      {'name': 'Pen Set', 'image': 'assets/images/pen_set.jpg'},
+      {'name': 'Highlighters', 'image': 'assets/images/highlighters.jpg'},
+      {'name': 'Sticky Notes', 'image': 'assets/images/sticky_notes.jpg'},
+      {'name': 'Paper Clips', 'image': 'assets/images/paper_clips.jpg'},
+      {'name': 'Stapler', 'image': 'assets/images/stapler.jpg'},
+      {'name': 'Eraser', 'image': 'assets/images/eraser.jpg'},
+      {'name': 'Ruler', 'image': 'assets/images/ruler.jpg'},
+      {'name': 'Glue Stick', 'image': 'assets/images/glue_stick.jpg'},
+      {'name': 'Scissors', 'image': 'assets/images/scissors.jpg'},
+      {'name': 'Calculator', 'image': 'assets/images/calculator.jpg'},
+      {'name': 'File Folders', 'image': 'assets/images/file_folders.jpg'},
+      {'name': 'Desk Organizer', 'image': 'assets/images/desk_organizer.jpg'},
     ],
     'Books': [
+      {'name': 'Fiction Novel', 'image': 'assets/images/fiction_novel.jpg'},
+      {'name': 'Textbook', 'image': 'assets/images/textbook.jpg'},
+      {'name': 'Magazine', 'image': 'assets/images/magazine.jpg'},
+      {'name': 'Comic Book', 'image': 'assets/images/comic_book.jpg'},
+      {'name': 'Biography', 'image': 'assets/images/biography.jpg'},
+      {'name': 'Science Book', 'image': 'assets/images/science_book.jpg'},
+      {'name': 'History Book', 'image': 'assets/images/history_book.jpg'},
+      {'name': 'Children\'s Book', 'image': 'assets/images/childrens_book.jpg'},
+      {'name': 'Cookbook', 'image': 'assets/images/cookbook.jpg'},
+      {'name': 'Travel Guide', 'image': 'assets/images/travel_guide.jpg'},
+      {'name': 'Self-Help Book', 'image': 'assets/images/self_help_book.jpg'},
+      {'name': 'Art Book', 'image': 'assets/images/art_book.jpg'},
       {
-        'name': 'Fiction Novel',
-        'image': 'https://placehold.co/150x150/fbc02d/000?text=Novel',
+        'name': 'Photography Book',
+        'image': 'assets/images/photography_book.jpg',
       },
-      {
-        'name': 'Textbook',
-        'image': 'https://placehold.co/150x150/fbc02d/000?text=Textbook',
-      },
+      {'name': 'Poetry Book', 'image': 'assets/images/poetry_book.jpg'},
+      {'name': 'Graphic Novel', 'image': 'assets/images/graphic_novel.jpg'},
+      {'name': 'Mystery Novel', 'image': 'assets/images/mystery_novel.jpg'},
+      {'name': 'Romance Novel', 'image': 'assets/images/romance_novel.jpg'},
+      {'name': 'Fantasy Novel', 'image': 'assets/images/fantasy_novel.jpg'},
+      {'name': 'Horror Novel', 'image': 'assets/images/horror_novel.jpg'},
+      {'name': 'Thriller Novel', 'image': 'assets/images/thriller_novel.jpg'},
     ],
   };
 
+  // Controllers for generic price and quantity input
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
+
+  // Controllers for specific inputs
+  final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _billAmountController = TextEditingController();
+  String? _selectedBillType;
+
   bool _isSaving = false;
 
   @override
   void dispose() {
     _priceController.dispose();
     _quantityController.dispose();
+    _itemNameController.dispose();
+    _billAmountController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveTransaction(String itemName) async {
+  Future<void> _saveTransaction(String itemName, String itemImage) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (mounted) {
@@ -197,30 +308,46 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
       return;
     }
 
-    final priceText = _priceController.text;
-    final quantityText = _quantityController.text;
+    String description;
+    double amount;
 
-    if (priceText.isEmpty || quantityText.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter both price and quantity.'),
-          ),
-        );
-      }
-      return;
-    }
-
-    final price = double.tryParse(priceText);
-    final quantity = int.tryParse(quantityText);
-
-    if (price == null || quantity == null || price <= 0 || quantity <= 0) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter valid numbers.')),
-        );
-      }
-      return;
+    switch (widget.category) {
+      case 'Books':
+      case 'Electronics':
+      case 'Cosmetics':
+        final itemDetails = _itemNameController.text;
+        final price = double.tryParse(_priceController.text);
+        if (itemDetails.isEmpty || price == null || price <= 0) {
+          _showError('Please enter a valid item name/brand and price.');
+          return;
+        }
+        description = '1 x $itemDetails';
+        amount = price;
+        break;
+      case 'Bill Payments':
+        final billAmount = double.tryParse(_billAmountController.text);
+        if (billAmount == null ||
+            billAmount <= 0 ||
+            _selectedBillType == null) {
+          _showError(
+            'Please enter a valid bill amount and select a bill type.',
+          );
+          return;
+        }
+        description = 'Bill Payment: $_selectedBillType';
+        amount = billAmount;
+        break;
+      default:
+        // Default case for categories with price and quantity
+        final price = double.tryParse(_priceController.text);
+        final quantity = int.tryParse(_quantityController.text);
+        if (price == null || quantity == null || price <= 0 || quantity <= 0) {
+          _showError('Please enter valid numbers for price and quantity.');
+          return;
+        }
+        description = '$quantity x $itemName';
+        amount = price * quantity;
+        break;
     }
 
     setState(() {
@@ -228,22 +355,21 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     });
 
     try {
-      final totalAmount = price * quantity;
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('transactions')
           .add({
-            'description': '$quantity x $itemName',
+            'description': description,
             'category': widget.category,
-            'amount': totalAmount,
+            'amount': amount,
             'timestamp': FieldValue.serverTimestamp(),
           });
 
       if (mounted) {
         Navigator.of(context).pop(); // Close dialog on success
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Transaction for $itemName saved!')),
+          SnackBar(content: Text('Transaction saved for $description!')),
         );
       }
     } catch (e) {
@@ -264,9 +390,21 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     }
   }
 
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   void _showItemDetailsDialog(String itemName, String itemImage) {
     _priceController.clear();
     _quantityController.clear();
+    _itemNameController.clear();
+    _billAmountController.clear();
+    _selectedBillType = null;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -274,47 +412,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: Text('Add $itemName'),
+          title: Text('Add ${widget.category} Expense'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    itemImage,
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image, size: 100),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _priceController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Price',
-                    prefixText: '\$',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _quantityController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Quantity',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: _buildDialogContent(itemName, itemImage),
           ),
           actions: [
             TextButton(
@@ -322,7 +422,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: _isSaving ? null : () => _saveTransaction(itemName),
+              onPressed: _isSaving
+                  ? null
+                  : () => _saveTransaction(itemName, itemImage),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6B5B95),
                 shape: RoundedRectangleBorder(
@@ -339,74 +441,224 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     );
   }
 
+  Widget _buildDialogContent(String itemName, String itemImage) {
+    switch (widget.category) {
+      case 'Books':
+        return _buildBookDialog();
+      case 'Electronics':
+      case 'Cosmetics':
+        return _buildGenericItemDialog(itemName, itemImage);
+      case 'Bill Payments':
+        return _buildBillPaymentDialog();
+      default:
+        return _buildDefaultItemDialog(itemName, itemImage);
+    }
+  }
+
+  Widget _buildDefaultItemDialog(String itemName, String itemImage) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(
+            itemImage,
+            height: 100,
+            width: 100,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 100),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _priceController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Price',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _quantityController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Quantity',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenericItemDialog(String itemName, String itemImage) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(
+            itemImage,
+            height: 100,
+            width: 100,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 100),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _itemNameController,
+          decoration: InputDecoration(
+            labelText: 'Enter Item Name/Brand',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _priceController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Price',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBookDialog() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _itemNameController,
+          decoration: InputDecoration(
+            labelText: 'Enter Book Title',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _priceController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Price',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBillPaymentDialog() {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _selectedBillType,
+              decoration: InputDecoration(
+                labelText: 'Select Bill Type',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent'].map((
+                String value,
+              ) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedBillType = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _billAmountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Bill Amount',
+                prefixText: '₹',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> itemsList = _items[widget.category] ?? [];
+    final bool isBillsPage = widget.category == 'Bill Payments';
+
+    // For Bill Payments, we don't display a grid of items
+    if (isBillsPage) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.category),
+          backgroundColor: const Color(0xFF6B5B95),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () => _showItemDetailsDialog('Bill Payment', ''),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B5B95),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 20,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Add New Bill Payment',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // For all other categories, display the grid
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.category),
         backgroundColor: const Color(0xFF6B5B95),
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // New eye-catching banner
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.yellow.shade400, Colors.orange.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Exclusive Offers',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Flat 40% OFF on all items!',
-                  style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: itemsList.length,
-              itemBuilder: (context, index) {
-                final item = itemsList[index];
-                return _buildItemGridCard(context, item);
-              },
-            ),
-          ),
-        ],
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 12.0,
+          mainAxisSpacing: 12.0,
+          childAspectRatio: 0.8,
+        ),
+        itemCount: itemsList.length,
+        itemBuilder: (context, index) {
+          final item = itemsList[index];
+          return _buildItemGridCard(context, item);
+        },
       ),
     );
   }
@@ -429,11 +681,11 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
+                  child: Image.asset(
                     item['image'],
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image, size: 70),
+                        const Icon(Icons.broken_image, size: 50),
                   ),
                 ),
               ),
@@ -442,7 +694,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                 item['name']!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: textColor,
                 ),
