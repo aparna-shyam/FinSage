@@ -8,7 +8,7 @@ import 'home_wrapper.dart';
 import 'change_password_page.dart';
 import 'firebase_options.dart';
 import 'theme_provider.dart';
-import 'login_page.dart'; // Change this import from home_page.dart
+import 'login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,10 +17,7 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (e) {
-    // This will prevent the app from crashing on hot restart if Firebase is already initialized
-    // debugPrint(e.toString());
-  }
+  } catch (e) {}
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -69,12 +66,12 @@ class FinSageApp extends StatelessWidget {
           if (snapshot.hasData) {
             return const HomeWrapper();
           }
-          return const LoginPage(); // Change this from HomePage()
+          return const LoginPage();
         },
       ),
       routes: {
         '/home': (context) => const HomeWrapper(),
-        '/login': (context) => const LoginPage(), // Change this from HomePage()
+        '/login': (context) => const LoginPage(),
         '/change-password': (context) => const ChangePasswordPage(),
       },
     );

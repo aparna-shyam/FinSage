@@ -5,21 +5,19 @@ import 'home_wrapper.dart';
 import 'forgotpass.dart';
 import 'intro_page.dart';
 
-// Custom Clipper to create a concave (inward-curving) shape at the bottom
 class BottomCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
-    path.lineTo(0, size.height); // Start at the bottom-left corner
+    path.lineTo(0, size.height);
     path.quadraticBezierTo(
-      size.width / 2, // Control point x (middle of the width)
-      size.height -
-          80, // Control point y (pushed upwards to make the curve concave)
-      size.width, // End point x (right edge)
-      size.height, // End at the bottom-right corner
+      size.width / 2,
+      size.height - 80,
+      size.width,
+      size.height,
     );
-    path.lineTo(size.width, 0); // Line to top right corner
-    path.lineTo(0, 0); // Line to top left corner
+    path.lineTo(size.width, 0);
+    path.lineTo(0, 0);
     path.close();
     return path;
   }
@@ -99,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // Login content below the curved image
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -117,7 +114,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Email TextField
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -143,7 +139,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password TextField
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -170,7 +165,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Login Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
@@ -186,7 +180,6 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 20),
 
-                  // "You don't have an account? Sign Up"
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
