@@ -4,11 +4,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'home_page.dart';
 import 'home_wrapper.dart';
 import 'change_password_page.dart';
 import 'firebase_options.dart';
 import 'theme_provider.dart';
+import 'login_page.dart'; // Change this import from home_page.dart
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,12 +69,12 @@ class FinSageApp extends StatelessWidget {
           if (snapshot.hasData) {
             return const HomeWrapper();
           }
-          return const HomePage();
+          return const LoginPage(); // Change this from HomePage()
         },
       ),
       routes: {
         '/home': (context) => const HomeWrapper(),
-        '/login': (context) => const HomePage(),
+        '/login': (context) => const LoginPage(), // Change this from HomePage()
         '/change-password': (context) => const ChangePasswordPage(),
       },
     );
