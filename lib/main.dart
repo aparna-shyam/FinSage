@@ -13,7 +13,14 @@ import 'theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // This will prevent the app from crashing on hot restart if Firebase is already initialized
+    // debugPrint(e.toString());
+  }
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
