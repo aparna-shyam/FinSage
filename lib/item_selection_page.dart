@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finsage/services/firestore_service.dart'; // Import the service
 
 class ItemSelectionPage extends StatefulWidget {
   final String category;
@@ -12,6 +13,8 @@ class ItemSelectionPage extends StatefulWidget {
 }
 
 class _ItemSelectionPageState extends State<ItemSelectionPage> {
+  final FirestoreService _firestoreService = FirestoreService();
+
   // Dummy data for each category. Using local assets for reliable loading.
   final Map<String, List<Map<String, dynamic>>> _items = {
     'Grocery': [
@@ -297,17 +300,6 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
   }
 
   Future<void> _saveTransaction(String itemName, String itemImage) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      if (mounted) {
-        Navigator.of(context).pop(); // Close dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User not logged in.')));
-      }
-      return;
-    }
-
     String description;
     double amount;
 
@@ -355,16 +347,11 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     });
 
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('transactions')
-          .add({
-            'description': description,
-            'category': widget.category,
-            'amount': amount,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+      await _firestoreService.addTransaction(
+        description: description,
+        category: widget.category,
+        amount: amount,
+      );
 
       if (mounted) {
         Navigator.of(context).pop(); // Close dialog on success

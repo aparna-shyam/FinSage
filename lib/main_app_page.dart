@@ -1,7 +1,7 @@
-// main_app_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class MainAppPage extends StatefulWidget {
   const MainAppPage({super.key});
@@ -33,11 +33,9 @@ class _MainAppPageState extends State<MainAppPage> {
 
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('transactions')
-          .orderBy('timestamp', descending: true)
-          .limit(10)
+          .collection('spending')
+          .where('userId', isEqualTo: user.uid)
+          .orderBy('date', descending: true)
           .get();
 
       final history = querySnapshot.docs.map((doc) => doc.data()).toList();
@@ -56,6 +54,10 @@ class _MainAppPageState extends State<MainAppPage> {
         });
       }
     }
+  }
+
+  String _formatCurrency(double amount) {
+    return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
   }
 
   @override
@@ -86,8 +88,7 @@ class _MainAppPageState extends State<MainAppPage> {
                   final description = transaction['description'] ?? 'N/A';
                   final category = transaction['category'] ?? 'N/A';
                   final amount =
-                      (transaction['amount'] as num?)?.toStringAsFixed(2) ??
-                      '0.00';
+                      (transaction['amount'] as num?)?.toDouble() ?? 0.0;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Card(
@@ -125,7 +126,7 @@ class _MainAppPageState extends State<MainAppPage> {
                               ),
                             ),
                             Text(
-                              '\$$amount',
+                              _formatCurrency(amount),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

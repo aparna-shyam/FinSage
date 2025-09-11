@@ -1,9 +1,10 @@
-// profile_page.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
+import 'spending_report_page.dart'; // Import the spending report page
+import 'notifications_page.dart'; // Import the notifications page
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -253,6 +254,24 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _viewSpendingReport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SpendingReportPage(),
+      ),
+    );
+  }
+
+  void _viewNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationsPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,16 +304,17 @@ class _ProfilePageState extends State<ProfilePage> {
                             backgroundColor: Colors.grey[200],
                             backgroundImage:
                                 _userData?['profilePictureUrl'] != null &&
-                                    _userData!['profilePictureUrl'].startsWith(
-                                      'assets/',
-                                    )
-                                ? AssetImage(_userData!['profilePictureUrl'])
-                                      as ImageProvider
-                                : (_userData?['profilePictureUrl'] != null
-                                      ? NetworkImage(
-                                          _userData!['profilePictureUrl'],
+                                        _userData!['profilePictureUrl']
+                                            .startsWith(
+                                          'assets/',
                                         )
-                                      : null),
+                                    ? AssetImage(_userData!['profilePictureUrl'])
+                                        as ImageProvider
+                                    : (_userData?['profilePictureUrl'] != null
+                                        ? NetworkImage(
+                                            _userData!['profilePictureUrl'],
+                                          )
+                                        : null),
                             child: _userData?['profilePictureUrl'] == null
                                 ? const Icon(
                                     Icons.person,
@@ -348,6 +368,43 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 40),
+
+                  // Button to navigate to spending report page
+                  ElevatedButton.icon(
+                    onPressed: _viewSpendingReport,
+                    icon: const Icon(Icons.bar_chart, color: Colors.white),
+                    label: const Text(
+                      'View Spending Report',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6B5B95),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Button to navigate to notifications page
+                  ElevatedButton.icon(
+                    onPressed: _viewNotifications,
+                    icon: const Icon(Icons.notifications, color: Colors.white),
+                    label: const Text(
+                      'Notifications',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6B5B95),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
                   ElevatedButton.icon(
                     onPressed: _signOut,
                     icon: const Icon(Icons.logout, color: Colors.white),
