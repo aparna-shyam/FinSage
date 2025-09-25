@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'spending_report_page.dart'; // Import the spending report page
 import 'notifications_page.dart'; // Import the notifications page
+import 'financial_setup_page.dart'; // Import the new Financial Setup page
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -19,7 +20,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
 
-  // A list of predefined image paths from the assets folder.
   final List<String> _avatarPaths = [
     'assets/avatars/avatar1.jpeg',
     'assets/avatars/avatar2.jpeg',
@@ -51,35 +51,21 @@ class _ProfilePageState extends State<ProfilePage> {
             });
           }
         } else {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-          }
+          if (mounted) setState(() => _isLoading = false);
         }
       } catch (e) {
         debugPrint('Error fetching user data: $e');
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        if (mounted) setState(() => _isLoading = false);
       }
     } else {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _signOut() async {
     try {
       await _auth.signOut();
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
-      }
+      if (mounted) Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       debugPrint('Error signing out: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,11 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _updateProfilePicture(String url) async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    if (mounted) setState(() => _isLoading = true);
 
     try {
       if (_user != null) {
@@ -101,17 +83,9 @@ class _ProfilePageState extends State<ProfilePage> {
             .collection('users')
             .doc(_user!.uid)
             .update({'profilePictureUrl': url});
-
-        if (mounted) {
-          setState(() {
-            _userData?['profilePictureUrl'] = url;
-          });
-        }
-
+        if (mounted) _userData?['profilePictureUrl'] = url;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture updated successfully!'),
-          ),
+          const SnackBar(content: Text('Profile picture updated successfully!')),
         );
       }
     } catch (e) {
@@ -122,11 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -163,9 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -174,29 +142,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _updateSuggestionsPreference(bool value) async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    if (mounted) setState(() => _isLoading = true);
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_user!.uid)
           .update({'receiveSuggestions': value});
-      if (mounted) {
-        setState(() {
-          _userData?['receiveSuggestions'] = value;
-        });
-      }
+      if (mounted) _userData?['receiveSuggestions'] = value;
     } catch (e) {
       debugPrint('Error updating preference: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -216,24 +172,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     title: const Text('Receive Financial Suggestions'),
                     value: _userData?['receiveSuggestions'] ?? false,
                     onChanged: (bool value) {
-                      setStateInDialog(() {
-                        _userData?['receiveSuggestions'] = value;
-                      });
+                      setStateInDialog(() => _userData?['receiveSuggestions'] = value);
                       _updateSuggestionsPreference(value);
                     },
                   ),
                   SwitchListTile(
                     title: const Text('Theme Mode (Dark/Light)'),
                     value: themeProvider.themeMode == ThemeMode.dark,
-                    onChanged: (bool value) {
-                      themeProvider.toggleTheme();
-                    },
+                    onChanged: (bool value) => themeProvider.toggleTheme(),
                   ),
                   ListTile(
                     title: const Text('Change Password'),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pop();
                       Navigator.pushNamed(context, '/change-password');
                     },
                   ),
@@ -241,9 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Close'),
                 ),
               ],
@@ -257,19 +207,24 @@ class _ProfilePageState extends State<ProfilePage> {
   void _viewSpendingReport() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SpendingReportPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const SpendingReportPage()),
     );
   }
 
   void _viewNotifications() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const NotificationsPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const NotificationsPage()),
     );
+  }
+
+  void _openFinancialSetup() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FinancialSetupPage()),
+    ).then((_) {
+      _fetchUserProfileData(); // Refresh after setup
+    });
   }
 
   @override
@@ -280,10 +235,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: const Color(0xFF6B5B95),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showSettingsDialog,
-          ),
+          IconButton(icon: const Icon(Icons.settings), onPressed: _showSettingsDialog),
         ],
       ),
       body: _isLoading
@@ -302,25 +254,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           CircleAvatar(
                             radius: 60,
                             backgroundColor: Colors.grey[200],
-                            backgroundImage:
-                                _userData?['profilePictureUrl'] != null &&
-                                        _userData!['profilePictureUrl']
-                                            .startsWith(
-                                          'assets/',
-                                        )
-                                    ? AssetImage(_userData!['profilePictureUrl'])
-                                        as ImageProvider
-                                    : (_userData?['profilePictureUrl'] != null
-                                        ? NetworkImage(
-                                            _userData!['profilePictureUrl'],
-                                          )
-                                        : null),
+                            backgroundImage: _userData?['profilePictureUrl'] != null &&
+                                    _userData!['profilePictureUrl'].startsWith('assets/')
+                                ? AssetImage(_userData!['profilePictureUrl']) as ImageProvider
+                                : (_userData?['profilePictureUrl'] != null
+                                    ? NetworkImage(_userData!['profilePictureUrl'])
+                                    : null),
                             child: _userData?['profilePictureUrl'] == null
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 70,
-                                    color: Colors.grey,
-                                  )
+                                ? const Icon(Icons.person, size: 70, color: Colors.grey)
                                 : null,
                           ),
                           Positioned(
@@ -330,18 +271,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF6B5B95),
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
                               child: const Padding(
                                 padding: EdgeInsets.all(4.0),
-                                child: Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
+                                child: Icon(Icons.edit, color: Colors.white, size: 20),
                               ),
                             ),
                           ),
@@ -352,29 +286,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 30),
                   Text(
                     'Name: ${_userData?['name'] ?? 'N/A'}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Email: ${_user?.email ?? 'N/A'}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text('Email: ${_user?.email ?? 'N/A'}', style: const TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
-                  Text(
-                    'Suggestions: ${_userData?['receiveSuggestions'] == true ? 'On' : 'Off'}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 40),
+                  Text('Suggestions: ${_userData?['receiveSuggestions'] == true ? 'On' : 'Off'}',
+                      style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 20),
 
-                  // Button to navigate to spending report page
+                  // Button for financial setup
                   ElevatedButton.icon(
-                    onPressed: _viewSpendingReport,
-                    icon: const Icon(Icons.bar_chart, color: Colors.white),
+                    onPressed: _openFinancialSetup,
+                    icon: const Icon(Icons.account_balance_wallet, color: Colors.white),
                     label: const Text(
-                      'View Spending Report',
+                      'Set Income & Savings Goal',
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -387,20 +313,26 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Button to navigate to notifications page
                   ElevatedButton.icon(
-                    onPressed: _viewNotifications,
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    label: const Text(
-                      'Notifications',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    onPressed: _viewSpendingReport,
+                    icon: const Icon(Icons.bar_chart, color: Colors.white),
+                    label: const Text('View Spending Report', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6B5B95),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  ElevatedButton.icon(
+                    onPressed: _viewNotifications,
+                    icon: const Icon(Icons.notifications, color: Colors.white),
+                    label: const Text('Notifications', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6B5B95),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -408,16 +340,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ElevatedButton.icon(
                     onPressed: _signOut,
                     icon: const Icon(Icons.logout, color: Colors.white),
-                    label: const Text(
-                      'Sign Out',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    label: const Text('Sign Out', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ],

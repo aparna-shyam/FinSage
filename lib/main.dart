@@ -1,10 +1,10 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'home_wrapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // 👈 add this
+import 'package:finsage/dashboard_page.dart'; 
 import 'change_password_page.dart';
 import 'firebase_options.dart';
 import 'theme_provider.dart';
@@ -17,7 +17,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (e) {}
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -28,6 +30,28 @@ void main() async {
 
 class FinSageApp extends StatelessWidget {
   const FinSageApp({super.key});
+
+  /// 👇 Save user to Firestore if not already there
+  Future<void> _saveUserToFirestore(User user) async {
+    final userDoc =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    final docSnapshot = await userDoc.get();
+
+    if (!docSnapshot.exists) {
+      await userDoc.set({
+        'name': user.displayName ?? 'User',
+        'email': user.email,
+        'phone': user.phoneNumber ?? '',
+        'profilePictureUrl': 'assets/avatars/avatar2.jpeg',
+        'receiveSuggestions': true,
+        'createdAt': DateTime.now(),
+      });
+      debugPrint("✅ User data saved to Firestore for ${user.uid}");
+    } else {
+      debugPrint("ℹ️ User already exists in Firestore: ${user.uid}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +88,15 @@ class FinSageApp extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasData) {
-            return const HomeWrapper();
+            final user = snapshot.data!;
+            // 👇 Save user profile on first login
+            _saveUserToFirestore(user);
+            return const DashboardPage();
           }
           return const LoginPage();
         },
       ),
       routes: {
-        '/home': (context) => const HomeWrapper(),
         '/login': (context) => const LoginPage(),
         '/change-password': (context) => const ChangePasswordPage(),
       },

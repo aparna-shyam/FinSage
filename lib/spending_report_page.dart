@@ -21,9 +21,29 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
     return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
   }
 
+  // New helper to get date range label
+  String _getDateRangeLabel(TimePeriod period) {
+    final now = DateTime.now();
+    switch (period) {
+      case TimePeriod.daily:
+        return DateFormat('d MMM y').format(now);
+      case TimePeriod.weekly:
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+        return '${DateFormat('d MMM').format(startOfWeek)} - ${DateFormat('d MMM y').format(endOfWeek)}';
+      case TimePeriod.monthly:
+        final firstDay = DateTime(now.year, now.month, 1);
+        final lastDay = DateTime(now.year, now.month + 1, 0);
+        return '${DateFormat('d MMM').format(firstDay)} - ${DateFormat('d MMM y').format(lastDay)}';
+      case TimePeriod.yearly:
+        final firstDay = DateTime(now.year, 1, 1);
+        final lastDay = DateTime(now.year, 12, 31);
+        return '${DateFormat('d MMM').format(firstDay)} - ${DateFormat('d MMM y').format(lastDay)}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the current authenticated user.
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -34,7 +54,6 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
       );
     }
 
-    // Build the query based on the selected time period
     DateTime startDate;
     final now = DateTime.now();
     switch (_selectedPeriod) {
@@ -65,6 +84,16 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildPeriodSelectionButtons(),
+            const SizedBox(height: 10),
+            // Display date range
+            Text(
+              _getDateRangeLabel(_selectedPeriod),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -87,7 +116,6 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
                     );
                   }
 
-                  // Process the data for the graph and list
                   final Map<String, double> categoryTotals = {};
                   double totalSpending = 0;
 
@@ -150,10 +178,10 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: TimePeriod.values.map((period) {
         final isSelected = period == _selectedPeriod;
-        // Correctly handle the color property to avoid the type error
         final Color? buttonColor = isSelected
             ? const Color(0xFF6B5B95)
-            : Theme.of(context).elevatedButtonTheme.style?.backgroundColor?.resolve({}) as Color?;
+            : Theme.of(context).elevatedButtonTheme.style?.backgroundColor
+                ?.resolve({}) as Color?;
 
         return ElevatedButton(
           onPressed: () {
@@ -236,8 +264,8 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
           borderData: FlBorderData(
             show: true,
             border: Border(
-              bottom: BorderSide(
-                  color: Theme.of(context).dividerColor, width: 2),
+              bottom:
+                  BorderSide(color: Theme.of(context).dividerColor, width: 2),
             ),
           ),
         ),
