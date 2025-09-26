@@ -277,6 +277,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
       {'name': 'Horror Novel', 'image': 'assets/images/horror_novel.jpg'},
       {'name': 'Thriller Novel', 'image': 'assets/images/thriller_novel.jpg'},
     ],
+    'Memberships': [], // Add an empty list for Memberships
   };
 
   // Controllers for generic price and quantity input
@@ -592,35 +593,58 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> itemsList = _items[widget.category] ?? [];
     final bool isBillsPage = widget.category == 'Bill Payments';
+    final bool isMedicinesPage = widget.category == 'Medicines';
+    final bool isMembershipsPage = widget.category == 'Memberships';
 
-    // For Bill Payments, we don't display a grid of items
+    // For Bill Payments, show the form directly on the page
     if (isBillsPage) {
       return Scaffold(
+        backgroundColor: const Color(0xFFECE2D2),
         appBar: AppBar(
           title: Text(widget.category),
-          backgroundColor: const Color(0xFF6B5B95),
+          backgroundColor: const Color(0xFFD9641E),
           elevation: 0,
         ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () => _showItemDetailsDialog('Bill Payment', ''),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6B5B95),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 20,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Add New Bill Payment',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
+            child: _BillPaymentForm(firestoreService: _firestoreService),
+          ),
+        ),
+      );
+    }
+
+    // For Medicines, show the form directly on the page
+    if (isMedicinesPage) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFECE2D2),
+        appBar: AppBar(
+          title: const Text('Medicines'),
+          backgroundColor: const Color(0xFFD9641E),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _MedicalExpenseForm(firestoreService: _firestoreService),
+          ),
+        ),
+      );
+    }
+
+    // For Memberships, show a dropdown and amount input
+    if (isMembershipsPage) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFECE2D2),
+        appBar: AppBar(
+          title: const Text('Memberships'),
+          backgroundColor: const Color(0xFFD9641E),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _MembershipExpenseForm(firestoreService: _firestoreService),
           ),
         ),
       );
@@ -628,9 +652,10 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
 
     // For all other categories, display the grid
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
         title: Text(widget.category),
-        backgroundColor: const Color(0xFF6B5B95),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
         elevation: 0,
       ),
       body: GridView.builder(
@@ -651,12 +676,10 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
   }
 
   Widget _buildItemGridCard(BuildContext context, Map<String, dynamic> item) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
-
     return InkWell(
       onTap: () => _showItemDetailsDialog(item['name'], item['image']),
       child: Card(
+        color: Colors.white, // White card background
         elevation: 5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Padding(
@@ -680,16 +703,512 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
               Text(
                 item['name']!,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: textColor,
+                  color: Colors.black, // Black text for contrast
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // Add this method to show the medical expense dialog
+  void _showMedicalExpenseDialog() {
+    final TextEditingController _amountController = TextEditingController();
+    final TextEditingController _hospitalController = TextEditingController();
+    bool _isSavingMedical = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text('Add Medical Expense'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Bill Amount',
+                        prefixText: '₹',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _hospitalController,
+                      decoration: InputDecoration(
+                        labelText: 'Hospital/Clinic',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: _isSavingMedical
+                      ? null
+                      : () async {
+                          final amount = double.tryParse(
+                            _amountController.text,
+                          );
+                          final hospital = _hospitalController.text.trim();
+                          if (amount == null ||
+                              amount <= 0 ||
+                              hospital.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter valid details.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            _isSavingMedical = true;
+                          });
+                          try {
+                            await _firestoreService.addTransaction(
+                              description: 'Medical Bill: $hospital',
+                              category: 'Medicines',
+                              amount: amount,
+                            );
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Medical expense saved!'),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to save: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isSavingMedical = false;
+                              });
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD9641E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: _isSavingMedical
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Add',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _MembershipExpenseForm extends StatefulWidget {
+  final FirestoreService firestoreService;
+  const _MembershipExpenseForm({required this.firestoreService});
+
+  @override
+  State<_MembershipExpenseForm> createState() => _MembershipExpenseFormState();
+}
+
+class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
+  final List<String> _membershipTypes = [
+    'Gym',
+    'Library',
+    'Streaming Service',
+    'Club',
+    'Magazine',
+    'Other',
+  ];
+  String? _selectedMembership;
+  final TextEditingController _amountController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedMembership,
+          decoration: InputDecoration(
+            labelText: 'Select Membership',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          items: _membershipTypes
+              .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+              .toList(),
+          onChanged: (val) {
+            setState(() {
+              _selectedMembership = val;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _amountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Membership Amount',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: _isSaving
+              ? null
+              : () async {
+                  final amount = double.tryParse(_amountController.text);
+                  if (_selectedMembership == null ||
+                      amount == null ||
+                      amount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please select a membership and enter a valid amount.',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() {
+                    _isSaving = true;
+                  });
+                  try {
+                    await widget.firestoreService.addTransaction(
+                      description: 'Membership: $_selectedMembership',
+                      category: 'Memberships',
+                      amount: amount,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Membership expense saved!'),
+                        ),
+                      );
+                      _amountController.clear();
+                      setState(() {
+                        _selectedMembership = null;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to save: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isSaving = false;
+                      });
+                    }
+                  }
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD9641E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+          ),
+          child: _isSaving
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Add Membership Expense',
+                  style: TextStyle(color: Colors.white),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BillPaymentForm extends StatefulWidget {
+  final FirestoreService firestoreService;
+  const _BillPaymentForm({required this.firestoreService});
+
+  @override
+  State<_BillPaymentForm> createState() => _BillPaymentFormState();
+}
+
+class _BillPaymentFormState extends State<_BillPaymentForm> {
+  final List<String> _billTypes = [
+    'Electricity',
+    'Water',
+    'Phone',
+    'Internet',
+    'Rent',
+  ];
+  String? _selectedBillType;
+  final TextEditingController _billAmountController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _billAmountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedBillType,
+          decoration: InputDecoration(
+            labelText: 'Select Bill Type',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          items: _billTypes
+              .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+              .toList(),
+          onChanged: (val) {
+            setState(() {
+              _selectedBillType = val;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _billAmountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Bill Amount',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: _isSaving
+              ? null
+              : () async {
+                  final billAmount = double.tryParse(
+                    _billAmountController.text,
+                  );
+                  if (_selectedBillType == null ||
+                      billAmount == null ||
+                      billAmount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please enter a valid bill amount and select a bill type.',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() {
+                    _isSaving = true;
+                  });
+                  try {
+                    await widget.firestoreService.addTransaction(
+                      description: 'Bill Payment: $_selectedBillType',
+                      category: 'Bill Payments',
+                      amount: billAmount,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Bill payment saved!')),
+                      );
+                      _billAmountController.clear();
+                      setState(() {
+                        _selectedBillType = null;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to save: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isSaving = false;
+                      });
+                    }
+                  }
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD9641E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+          ),
+          child: _isSaving
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Add Bill Payment',
+                  style: TextStyle(color: Colors.white),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MedicalExpenseForm extends StatefulWidget {
+  final FirestoreService firestoreService;
+  const _MedicalExpenseForm({required this.firestoreService});
+
+  @override
+  State<_MedicalExpenseForm> createState() => _MedicalExpenseFormState();
+}
+
+class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _hospitalController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _hospitalController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _amountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Bill Amount',
+            prefixText: '₹',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _hospitalController,
+          decoration: InputDecoration(
+            labelText: 'Hospital/Clinic',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: _isSaving
+              ? null
+              : () async {
+                  final amount = double.tryParse(_amountController.text);
+                  final hospital = _hospitalController.text.trim();
+                  if (amount == null || amount <= 0 || hospital.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter valid details.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() {
+                    _isSaving = true;
+                  });
+                  try {
+                    await widget.firestoreService.addTransaction(
+                      description: 'Medical Bill: $hospital',
+                      category: 'Medicines',
+                      amount: amount,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Medical expense saved!')),
+                      );
+                      _amountController.clear();
+                      _hospitalController.clear();
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to save: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isSaving = false;
+                      });
+                    }
+                  }
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD9641E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+          ),
+          child: _isSaving
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Add Medical Expense',
+                  style: TextStyle(color: Colors.white),
+                ),
+        ),
+      ],
     );
   }
 }

@@ -43,36 +43,21 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.swap_horiz),
             label: 'Transactions',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pie_chart),
-            label: 'Budget',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Goals',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Goals'),
           BottomNavigationBarItem(
             icon: Icon(Icons.insights),
             label: 'Insights',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFF6B5B95),
@@ -153,7 +138,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
         final category = data['category'] as String? ?? 'Other';
         totalSpending += amount;
-        _monthlySpending.update(category, (val) => val + amount, ifAbsent: () => amount);
+        _monthlySpending.update(
+          category,
+          (val) => val + amount,
+          ifAbsent: () => amount,
+        );
       }
       _currentBalance = totalSpending;
 
@@ -201,14 +190,23 @@ class _DashboardHomeState extends State<_DashboardHome> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu), // Hamburger icon
+          onPressed: () {
+            // You can open a drawer or add functionality
+          },
+        ),
         title: Text('Hello, $_userName!'),
         backgroundColor: const Color(0xFF6B5B95),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart),
+            icon: const Icon(Icons.notifications_none), // Bell icon
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SpendingReportPage()));
+              // Add notification functionality here
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Notifications tapped')),
+              );
             },
           ),
         ],
@@ -222,13 +220,18 @@ class _DashboardHomeState extends State<_DashboardHome> {
               // Current Balance Card
               Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
                 color: cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Text('Current Balance', style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        'Current Balance',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       Text(
                         _formatCurrency(_currentBalance),
                         style: Theme.of(context).textTheme.displaySmall,
@@ -237,12 +240,16 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       LinearProgressIndicator(
                         value: _currentBalance / _monthlyBudget,
                         backgroundColor: Colors.grey.shade300,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.green,
+                        ),
                         minHeight: 10,
                       ),
                       const SizedBox(height: 4),
-                      Text('Spent this month: ${_formatCurrency(_currentBalance)} / ${_formatCurrency(_monthlyBudget)}',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        'Spent this month: ${_formatCurrency(_currentBalance)} / ${_formatCurrency(_monthlyBudget)}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -250,7 +257,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
               const SizedBox(height: 20),
 
               // Budget Progress for top 3 categories
-              Text('Budget Progress (Top Categories)', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Budget Progress (Top Categories)',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 10),
               ...topThreeCategories.map((entry) {
                 final category = entry.key;
@@ -274,49 +284,34 @@ class _DashboardHomeState extends State<_DashboardHome> {
               }),
               const SizedBox(height: 20),
 
-              // API Insight from LLM
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                color: cardColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.lightbulb, color: Colors.amber.shade700),
-                          const SizedBox(width: 8),
-                          Text('Daily Financial Insight', style: Theme.of(context).textTheme.titleMedium),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_apiTip, style: Theme.of(context).textTheme.bodyMedium),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
               // Recent Transactions
-              Text('Recent Transactions', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Recent Transactions',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 10),
               if (_recentTransactions.isNotEmpty)
                 ..._recentTransactions.map((transaction) {
                   final description = transaction['description'] ?? 'N/A';
                   final category = transaction['category'] ?? 'N/A';
-                  final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+                  final amount =
+                      (transaction['amount'] as num?)?.toDouble() ?? 0.0;
                   final timestamp = (transaction['date'] as Timestamp).toDate();
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     color: cardColor,
                     child: ListTile(
-                      title: Text(description, style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('$category - ${DateFormat('MMM d, y').format(timestamp)}'),
+                      title: Text(
+                        description,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        '$category - ${DateFormat('MMM d, y').format(timestamp)}',
+                      ),
                       trailing: Text(
                         _formatCurrency(amount),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.redAccent),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: Colors.redAccent),
                       ),
                     ),
                   );

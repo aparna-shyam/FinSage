@@ -73,7 +73,7 @@ class _ForgotPassPageState extends State<ForgotPassPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF9BCD9B),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
         title: const Text('Forgot Password'),
       ),
       body: Padding(
@@ -97,7 +97,7 @@ class _ForgotPassPageState extends State<ForgotPassPage> {
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9BCD9B),
+                  backgroundColor: const Color(0xFFD9641E), // Orange button
                   padding: const EdgeInsets.symmetric(
                     vertical: 16,
                     horizontal: 32,
@@ -111,12 +111,16 @@ class _ForgotPassPageState extends State<ForgotPassPage> {
                     _sendPasswordResetEmail();
                   }
                 },
-                child: const Text('Submit', style: TextStyle(fontSize: 18)),
+                child: const Text(
+                  'Submit',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ],
           ),
         ),
       ),
+      backgroundColor: const Color(0xFFECE2D2), // Light background
     );
   }
 

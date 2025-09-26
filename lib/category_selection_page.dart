@@ -63,12 +63,18 @@ class CategorySelectionPage extends StatelessWidget {
         'icon': Icons.menu_book,
         'color': Colors.amber.shade400,
       },
+      {
+        'name': 'Memberships',
+        'icon': Icons.card_membership,
+        'color': Colors.deepOrange.shade400,
+      },
     ];
 
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
         title: const Text('Choose a Spending Category'),
-        backgroundColor: const Color(0xFF6B5B95),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -81,7 +87,7 @@ class CategorySelectionPage extends StatelessWidget {
               'Choose a Spending Category',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
+                color: Colors.black, // Make heading black for contrast
               ),
             ),
             const SizedBox(height: 20),
@@ -127,6 +133,7 @@ class CategorySelectionPage extends StatelessWidget {
         );
       },
       child: Card(
+        color: Colors.white, // White card background
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Column(
@@ -136,7 +143,9 @@ class CategorySelectionPage extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               name,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.black),
               textAlign: TextAlign.center,
             ),
           ],

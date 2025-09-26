@@ -55,11 +55,8 @@ class _SignUpPageState extends State<SignUpPage> {
       }
 
       // 1. Create a new user
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       // Get the user's unique ID (uid)
       final String uid = userCredential.user!.uid;
@@ -117,8 +114,9 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
-        backgroundColor: const Color(0xFF9BCD9B),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
         title: const Text('Sign Up'),
       ),
       body: Padding(
@@ -127,6 +125,16 @@ class _SignUpPageState extends State<SignUpPage> {
           key: _formKey,
           child: ListView(
             children: [
+              const SizedBox(height: 16),
+              Text(
+                'Create Account',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black, // Changed from orange to black
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
               _buildTextField(
                 controller: _nameController,
                 label: 'Name',
@@ -171,7 +179,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   style: TextStyle(fontSize: 14),
                 ),
                 value: _receiveSuggestions,
-                activeColor: const Color(0xFF9BCD9B),
+                activeColor: const Color(0xFFD9641E), // Orange checkbox
                 onChanged: (bool? value) {
                   setState(() {
                     _receiveSuggestions = value ?? false;
@@ -182,7 +190,7 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9BCD9B),
+                  backgroundColor: const Color(0xFFD9641E), // Orange button
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -193,7 +201,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     _signUp();
                   }
                 },
-                child: const Text('Sign Up', style: TextStyle(fontSize: 18)),
+                child: const Text(
+                  'Sign Up',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -234,8 +245,10 @@ class _SignUpPageState extends State<SignUpPage> {
         labelText: label,
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,

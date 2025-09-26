@@ -58,7 +58,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Change Password'),
-        backgroundColor: const Color(0xFF6B5B95),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -87,7 +87,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9BCD9B),
+                  backgroundColor: const Color(0xFFD9641E), // Orange button
                   padding: const EdgeInsets.symmetric(
                     vertical: 16,
                     horizontal: 32,
@@ -99,13 +99,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 onPressed: _changePassword,
                 child: const Text(
                   'Update Password',
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ],
           ),
         ),
       ),
+      backgroundColor: const Color(0xFFECE2D2), // Light background
     );
   }
 

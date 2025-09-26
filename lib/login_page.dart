@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:finsage/dashboard_page.dart';
 import 'package:finsage/signup_page.dart';
 import 'package:finsage/theme_provider.dart';
+import 'package:finsage/forgotpass.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -38,9 +39,7 @@ class _LoginPageState extends State<LoginPage> {
           // Navigate to the DashboardPage on successful login
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => const DashboardPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
           );
         }
       } on FirebaseAuthException catch (e) {
@@ -64,10 +63,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -76,23 +73,12 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: Icon(
-                      isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                      color: isDarkMode ? Colors.white : Colors.black,
-                    ),
-                    onPressed: () {
-                      themeProvider.toggleTheme();
-                    },
-                  ),
-                ),
                 Text(
                   'Welcome Back!',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFD9641E), // Orange color as before
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
@@ -160,16 +146,24 @@ class _LoginPageState extends State<LoginPage> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/change-password');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPassPage(),
+                        ),
+                      );
                     },
-                    child: const Text('Forgot Password?'),
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Color(0xFFD9641E)),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6B5B95),
+                    backgroundColor: const Color(0xFFD9641E),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -192,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SignUpPage(), // ✅ fixed
+                            builder: (context) => const SignUpPage(),
                           ),
                         );
                       },
@@ -200,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                         'Sign Up',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6B5B95),
+                          color: Color(0xFFD9641E),
                         ),
                       ),
                     ),

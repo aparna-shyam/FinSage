@@ -63,29 +63,39 @@ class _InsightsPageState extends State<InsightsPage> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
-    final cardColor = isDarkMode ? Colors.grey[850] : null;
+    final cardColor = isDarkMode ? Colors.grey[850] : Colors.white;
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (!_receiveSuggestions) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Financial suggestions are turned off. You can enable them in your profile settings.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, color: textColor),
+      return Scaffold(
+        backgroundColor: const Color(0xFFECE2D2), // Set background color
+        appBar: AppBar(
+          title: const Text('Financial Insights'),
+          backgroundColor: const Color(0xFFD9641E), // Orange app bar
+          elevation: 0,
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Financial suggestions are turned off. You can enable them in your profile settings.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, color: textColor),
+            ),
           ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
         title: const Text('Financial Insights'),
-        backgroundColor: const Color(0xFF6B5B95),
+        backgroundColor: const Color(0xFFD9641E), // Orange app bar
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -106,6 +116,9 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Widget _buildNewsAndTipsCard(Color textColor, Color? cardColor) {
+    // Change to white
+    final Color whiteCard = Colors.white;
+
     return FutureBuilder<List<Map<String, String>>>(
       future: NewsService().fetchFinancialNewsAndTips(),
       builder: (context, snapshot) {
@@ -123,14 +136,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
         return Container(
           decoration: BoxDecoration(
-            color: cardColor,
-            gradient: cardColor == null
-                ? LinearGradient(
-                    colors: [Colors.green.shade100, Colors.lightGreen.shade50],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            color: whiteCard, // Changed to white
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -144,7 +150,9 @@ class _InsightsPageState extends State<InsightsPage> {
           child: Card(
             color: Colors.transparent,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -204,6 +212,9 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   Widget _buildInvestmentSuggestionsCard(Color textColor, Color? cardColor) {
+    // Change to white
+    final Color whiteCard = Colors.white;
+
     return FutureBuilder<List<String>>(
       future: NewsService().fetchInvestmentSuggestions(),
       builder: (context, snapshot) {
@@ -221,14 +232,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
         return Container(
           decoration: BoxDecoration(
-            color: cardColor,
-            gradient: cardColor == null
-                ? LinearGradient(
-                    colors: [Colors.blue.shade100, Colors.blue.shade50],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            color: whiteCard, // Changed to white
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -242,7 +246,9 @@ class _InsightsPageState extends State<InsightsPage> {
           child: Card(
             color: Colors.transparent,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(

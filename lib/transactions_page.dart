@@ -2,58 +2,176 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-class TransactionsPage extends StatelessWidget {
+class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
+
+  @override
+  State<TransactionsPage> createState() => _TransactionsPageState();
+}
+
+class _TransactionsPageState extends State<TransactionsPage> {
+  String _selectedFilter = 'Today';
+
+  final List<String> _filters = [
+    'Today',
+    'This Week',
+    'This Month',
+    'This Year',
+    'All Time',
+  ];
+
+  DateTimeRange _getDateRange(String filter) {
+    final now = DateTime.now();
+    switch (filter) {
+      case 'Today':
+        return DateTimeRange(
+          start: DateTime(now.year, now.month, now.day, 0, 0, 0),
+          end: DateTime(now.year, now.month, now.day, 23, 59, 59),
+        );
+      case 'This Week':
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+        return DateTimeRange(
+          start: DateTime(
+            startOfWeek.year,
+            startOfWeek.month,
+            startOfWeek.day,
+            0,
+            0,
+            0,
+          ),
+          end: DateTime(
+            endOfWeek.year,
+            endOfWeek.month,
+            endOfWeek.day,
+            23,
+            59,
+            59,
+          ),
+        );
+      case 'This Month':
+        final startOfMonth = DateTime(now.year, now.month, 1);
+        final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+        return DateTimeRange(start: startOfMonth, end: endOfMonth);
+      case 'This Year':
+        final startOfYear = DateTime(now.year, 1, 1);
+        final endOfYear = DateTime(now.year, 12, 31, 23, 59, 59);
+        return DateTimeRange(start: startOfYear, end: endOfYear);
+      case 'All Time':
+      default:
+        return DateTimeRange(
+          start: DateTime(2000, 1, 1),
+          end: DateTime(now.year, now.month, now.day, 23, 59, 59),
+        );
+    }
+  }
+
+  // Helper to aggregate transactions for plotting
+  Map<String, double> _aggregateTransactions(
+    List<QueryDocumentSnapshot> transactions,
+    String filter,
+  ) {
+    Map<String, double> data = {};
+    for (var doc in transactions) {
+      final date = (doc['date'] as Timestamp).toDate();
+      String key;
+      switch (filter) {
+        case 'Today':
+          key = DateFormat('hh a').format(date); // Hourly
+          break;
+        case 'This Week':
+          key = DateFormat('EEE').format(date); // Day of week
+          break;
+        case 'This Month':
+          key = DateFormat('d MMM').format(date); // Day of month
+          break;
+        case 'This Year':
+          key = DateFormat('MMM').format(date); // Month
+          break;
+        case 'All Time':
+        default:
+          key = DateFormat('y').format(date); // Year
+      }
+      data[key] = (data[key] ?? 0) + (doc['amount'] as num).toDouble();
+    }
+    // Sort keys chronologically
+    var sortedKeys = data.keys.toList()
+      ..sort((a, b) {
+        try {
+          final da = DateFormat('d MMM').parse(a, true);
+          final db = DateFormat('d MMM').parse(b, true);
+          return da.compareTo(db);
+        } catch (_) {
+          return a.compareTo(b);
+        }
+      });
+    return {for (var k in sortedKeys) k: data[k]!};
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text('User not logged in.')),
-      );
+      return const Scaffold(body: Center(child: Text('User not logged in.')));
     }
 
-    // Get today's start and end times
-    final DateTime now = DateTime.now();
-    final DateTime startOfDay = DateTime(now.year, now.month, now.day, 0, 0, 0);
-    final DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final now = DateTime.now();
+    final dateRange = _getDateRange(_selectedFilter);
 
-    // Format amount to currency
     String formatCurrency(double amount) {
       return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFECE2D2),
       appBar: AppBar(
         title: const Text('Transaction History'),
-        backgroundColor: const Color(0xFF6B5B95),
+        backgroundColor: const Color(0xFFD9641E),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.bar_chart),
+            onSelected: (value) {
+              setState(() {
+                _selectedFilter = value;
+              });
+            },
+            itemBuilder: (context) => _filters
+                .map(
+                  (filter) => PopupMenuItem(value: filter, child: Text(filter)),
+                )
+                .toList(),
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Today's date header
+          // Filter header
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              "Today's Transactions (${DateFormat('EEEE, MMM d, y').format(now)})",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              "${_selectedFilter == 'Today' ? "Today's" : _selectedFilter} Transactions"
+              "${_selectedFilter == 'Today' ? ' (${DateFormat('EEEE, MMM d, y').format(now)})' : ''}",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-
-          // Transactions List
+          // Transactions List & Chart
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('spending')
                   .where('userId', isEqualTo: user.uid)
-                  .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-                  .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+                  .where(
+                    'date',
+                    isGreaterThanOrEqualTo: Timestamp.fromDate(dateRange.start),
+                  )
+                  .where(
+                    'date',
+                    isLessThanOrEqualTo: Timestamp.fromDate(dateRange.end),
+                  )
                   .orderBy('date', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -64,42 +182,165 @@ class TransactionsPage extends StatelessWidget {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No transactions for today.'));
+                  return Center(
+                    child: Text(
+                      'No transactions for $_selectedFilter.'.replaceAll(
+                        'Today',
+                        'today',
+                      ),
+                    ),
+                  );
                 }
 
                 final transactions = snapshot.data!.docs;
 
-                return ListView.builder(
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
-                    final data = transactions[index].data() as Map<String, dynamic>;
-                    final description = data['description'] ?? 'N/A';
-                    final category = data['category'] ?? 'N/A';
-                    final amount = (data['amount'] as num).toDouble();
-                    final date = (data['date'] as Timestamp).toDate();
+                // --- Line Chart Data ---
+                final aggData = _aggregateTransactions(
+                  transactions,
+                  _selectedFilter,
+                );
+                final spots = aggData.entries
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) =>
+                          FlSpot(entry.key.toDouble(), entry.value.value),
+                    )
+                    .toList();
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      elevation: 2,
-                      child: ListTile(
-                        leading: const Icon(Icons.receipt),
-                        title: Text(
-                          description,
-                          style: Theme.of(context).textTheme.titleMedium,
+                // Group transactions by date (yyyy-MM-dd)
+                final Map<String, List<QueryDocumentSnapshot>> grouped = {};
+                for (var doc in transactions) {
+                  final date = (doc['date'] as Timestamp).toDate();
+                  final dateKey = DateFormat('yyyy-MM-dd').format(date);
+                  grouped.putIfAbsent(dateKey, () => []).add(doc);
+                }
+
+                return ListView(
+                  children: [
+                    if (aggData.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                        subtitle: Text(
-                          '$category - ${DateFormat('hh:mm a').format(date)}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        trailing: Text(
-                          formatCurrency(amount),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.red,
+                        child: SizedBox(
+                          height: 220,
+                          child: LineChart(
+                            LineChartData(
+                              gridData: FlGridData(show: true),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: true),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      final idx = value.toInt();
+                                      if (idx < 0 || idx >= aggData.keys.length)
+                                        return const SizedBox.shrink();
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                        ),
+                                        child: Text(
+                                          aggData.keys.elementAt(idx),
+                                          style: const TextStyle(fontSize: 10),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                rightTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
                               ),
+                              borderData: FlBorderData(show: true),
+                              minY: 0,
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: spots,
+                                  isCurved: true,
+                                  color: const Color(0xFFD9641E),
+                                  barWidth: 3,
+                                  dotData: FlDotData(show: true),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    );
-                  },
+                    // --- Existing grouped transaction list ---
+                    ...grouped.entries.map((entry) {
+                      final dateLabel = DateFormat(
+                        'EEEE, MMM d, y',
+                      ).format(DateTime.parse(entry.key));
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              dateLabel,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD9641E),
+                              ),
+                            ),
+                          ),
+                          ...entry.value.map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final description = data['description'] ?? 'N/A';
+                            final category = data['category'] ?? 'N/A';
+                            final amount = (data['amount'] as num).toDouble();
+                            final date = (data['date'] as Timestamp).toDate();
+
+                            return Card(
+                              color: Colors.white,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              elevation: 2,
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.receipt,
+                                  color: Color(0xFFD9641E),
+                                ),
+                                title: Text(
+                                  description,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(color: Colors.black),
+                                ),
+                                subtitle: Text(
+                                  '$category - ${DateFormat('hh:mm a').format(date)}',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.black87),
+                                ),
+                                trailing: Text(
+                                  formatCurrency(amount),
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      );
+                    }),
+                  ],
                 );
               },
             ),
