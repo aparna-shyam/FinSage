@@ -43,8 +43,11 @@ class NewsService {
       content.add({'text': "Error fetching news: $e", 'url': ''});
     }
 
-    final randomTip = _financialTips[Random().nextInt(_financialTips.length)];
-    content.add({'text': 'Tip: $randomTip', 'url': ''});
+    // 🔹 Instead of 1 random tip, pick 3 random unique tips
+    final tips = (List.of(_financialTips)..shuffle()).take(3).toList();
+    for (var tip in tips) {
+      content.add({'text': 'Tip: $tip', 'url': ''});
+    }
 
     return content;
   }

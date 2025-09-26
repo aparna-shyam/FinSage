@@ -3,13 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:finsage/item_selection_page.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:finsage/services/news_service.dart';
 
-// Import the new placeholder pages
+// Import the placeholder pages
 import 'package:finsage/transactions_page.dart';
 import 'package:finsage/budget_page.dart';
 import 'package:finsage/goals_page.dart';
 import 'package:finsage/profile_page.dart';
 import 'package:finsage/spending_report_page.dart';
+import 'package:finsage/insights_page.dart';
+import 'package:finsage/category_selection_page.dart'; // Import the CategorySelectionPage
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -26,6 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
     const TransactionsPage(),
     const BudgetPage(),
     const GoalsPage(),
+    const InsightsPage(),
     const ProfilePage(),
   ];
 
@@ -44,11 +49,30 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Transactions'),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Goals'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.swap_horiz),
+            label: 'Transactions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.pie_chart),
+            label: 'Budget',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Goals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.insights),
+            label: 'Insights',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFF6B5B95),
@@ -56,50 +80,18 @@ class _DashboardPageState extends State<DashboardPage> {
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
       ),
-      floatingActionButton: _selectedIndex == 1
-          ? FloatingActionButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return SimpleDialog(
-                      title: const Text('Select Category'),
-                      children: [
-                        ...[
-                          'Grocery',
-                          'Medicines',
-                          'Food',
-                          'Drinks',
-                          'Bill Payments',
-                          'Apparel',
-                          'Electronics',
-                          'Cosmetics',
-                          'Sports',
-                          'Stationary',
-                          'Books',
-                        ].map((category) {
-                          return SimpleDialogOption(
-                            child: Text(category),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ItemSelectionPage(category: category),
-                                ),
-                              );
-                            },
-                          );
-                        }).toList(),
-                      ],
-                    );
-                  },
-                );
-              },
-              backgroundColor: const Color(0xFF6B5B95),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CategorySelectionPage(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xFF6B5B95),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
@@ -112,12 +104,14 @@ class _DashboardHome extends StatefulWidget {
 class _DashboardHomeState extends State<_DashboardHome> {
   String _userName = '';
   double _currentBalance = 0;
+  double _monthlyBudget = 15000;
+  Map<String, double> _monthlySpending = {};
   List<Map<String, dynamic>> _recentTransactions = [];
-  Map<String, double> _budgetGoals = {}; // category -> goal
-  Map<String, double> _spentInCategory = {}; // category -> spent
   bool _isLoading = true;
+  String _apiTip = "Loading daily tip...";
 
   User? get user => FirebaseAuth.instance.currentUser;
+  final _newsService = NewsService();
 
   @override
   void initState() {
@@ -133,7 +127,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     }
 
     try {
-      // Fetch user profile
+      // Fetch user profile data and monthly budget
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -141,26 +135,27 @@ class _DashboardHomeState extends State<_DashboardHome> {
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
         _userName = data['name'] ?? 'User';
-        final budgetMap = data['budgetGoals'] as Map<String, dynamic>? ?? {};
-        _budgetGoals = budgetMap.map((k, v) => MapEntry(k, (v as num).toDouble()));
+        _monthlyBudget = (data['monthlyBudget'] as num?)?.toDouble() ?? 15000;
       }
 
-      // Fetch spending
+      // Fetch current month's spending
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
       final spendingSnapshot = await FirebaseFirestore.instance
           .collection('spending')
           .where('userId', isEqualTo: currentUser.uid)
+          .where('date', isGreaterThanOrEqualTo: startOfMonth)
           .get();
 
-      _currentBalance = 0;
-      _spentInCategory = {};
-
+      double totalSpending = 0;
       for (var doc in spendingSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+        final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
         final category = data['category'] as String? ?? 'Other';
-        _currentBalance += amount;
-        _spentInCategory.update(category, (value) => value + amount, ifAbsent: () => amount);
+        totalSpending += amount;
+        _monthlySpending.update(category, (val) => val + amount, ifAbsent: () => amount);
       }
+      _currentBalance = totalSpending;
 
       // Fetch recent transactions
       final transactionsSnapshot = await FirebaseFirestore.instance
@@ -172,10 +167,20 @@ class _DashboardHomeState extends State<_DashboardHome> {
       _recentTransactions = transactionsSnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
+
+      // Fetch financial tips and investment suggestions
+      final tips = await _newsService.fetchFinancialNewsAndTips();
+      if (tips.isNotEmpty) {
+        _apiTip = tips.first['text'] ?? "Try setting up a budget!";
+      }
     } catch (e) {
       debugPrint('Error fetching dashboard data: $e');
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -187,6 +192,13 @@ class _DashboardHomeState extends State<_DashboardHome> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? Colors.grey[850] : null;
+
+    final sortedSpending = _monthlySpending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topThreeCategories = sortedSpending.take(3);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Hello, $_userName!'),
@@ -196,10 +208,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
           IconButton(
             icon: const Icon(Icons.bar_chart),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SpendingReportPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SpendingReportPage()));
             },
           ),
         ],
@@ -210,19 +219,29 @@ class _DashboardHomeState extends State<_DashboardHome> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Balance Card
+              // Current Balance Card
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                color: cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Text('Current Balance', style: Theme.of(context).textTheme.titleLarge),
-                      Text(_formatCurrency(_currentBalance),
-                          style: Theme.of(context).textTheme.displaySmall),
+                      Text(
+                        _formatCurrency(_currentBalance),
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
                       const SizedBox(height: 8),
-                      Text('Available vs Reserved: ${_formatCurrency(_currentBalance * 0.8)} / ${_formatCurrency(_currentBalance * 0.2)}',
+                      LinearProgressIndicator(
+                        value: _currentBalance / _monthlyBudget,
+                        backgroundColor: Colors.grey.shade300,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                        minHeight: 10,
+                      ),
+                      const SizedBox(height: 4),
+                      Text('Spent this month: ${_formatCurrency(_currentBalance)} / ${_formatCurrency(_monthlyBudget)}',
                           style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
@@ -230,29 +249,54 @@ class _DashboardHomeState extends State<_DashboardHome> {
               ),
               const SizedBox(height: 20),
 
-              // Budget Goals
-              Text('Budget Progress', style: Theme.of(context).textTheme.titleLarge),
+              // Budget Progress for top 3 categories
+              Text('Budget Progress (Top Categories)', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 10),
-              ..._budgetGoals.keys.map((category) {
-                final budget = _budgetGoals[category]!;
-                final spent = _spentInCategory[category] ?? 0;
-                final progress = spent / budget;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('$category: ${_formatCurrency(spent)} / ${_formatCurrency(budget)}'),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: progress.toDouble(), // cast to double
-                      color: Colors.purple,
-                      backgroundColor: Colors.grey.shade300,
-                      minHeight: 8,
+              ...topThreeCategories.map((entry) {
+                final category = entry.key;
+                final spent = entry.value;
+                final budget = _monthlyBudget / topThreeCategories.length;
+                final progress = budget > 0 ? spent / budget : 0.0;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: LinearPercentIndicator(
+                    lineHeight: 16.0,
+                    percent: progress > 1.0 ? 1.0 : progress,
+                    backgroundColor: Colors.grey.shade300,
+                    progressColor: progress > 1.0 ? Colors.red : Colors.purple,
+                    barRadius: const Radius.circular(8),
+                    center: Text(
+                      "$category: ${_formatCurrency(spent)} / ${_formatCurrency(budget)}",
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
                     ),
-                    const SizedBox(height: 10),
-                  ],
+                  ),
                 );
-              }).toList(),
+              }),
+              const SizedBox(height: 20),
 
+              // API Insight from LLM
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                color: cardColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.lightbulb, color: Colors.amber.shade700),
+                          const SizedBox(width: 8),
+                          Text('Daily Financial Insight', style: Theme.of(context).textTheme.titleMedium),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(_apiTip, style: Theme.of(context).textTheme.bodyMedium),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
 
               // Recent Transactions
@@ -260,36 +304,24 @@ class _DashboardHomeState extends State<_DashboardHome> {
               const SizedBox(height: 10),
               if (_recentTransactions.isNotEmpty)
                 ..._recentTransactions.map((transaction) {
-                  final description = transaction['description'] as String? ?? 'N/A';
-                  final category = transaction['category'] as String? ?? 'N/A';
-                  final amount = (transaction['amount'] as num?)?.toDouble() ?? 0;
-                  final timestamp = transaction['date'] as Timestamp;
-
+                  final description = transaction['description'] ?? 'N/A';
+                  final category = transaction['category'] ?? 'N/A';
+                  final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+                  final timestamp = (transaction['date'] as Timestamp).toDate();
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: cardColor,
                     child: ListTile(
-                      title: Text(description),
-                      subtitle: Text('$category - ${DateFormat('MMM d, y').format(timestamp.toDate())}'),
-                      trailing: Text(_formatCurrency(amount), style: Theme.of(context).textTheme.titleMedium),
+                      title: Text(description, style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text('$category - ${DateFormat('MMM d, y').format(timestamp)}'),
+                      trailing: Text(
+                        _formatCurrency(amount),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.redAccent),
+                      ),
                     ),
                   );
-                }).toList()
-              else
-                const Center(child: Text('No recent transactions.')),
-
+                }),
               const SizedBox(height: 20),
-              // Daily tip placeholder
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    'Tip: Try to reduce soda consumption this week!',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ),
             ],
           ),
         ),

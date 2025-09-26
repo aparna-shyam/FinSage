@@ -30,6 +30,7 @@ dependencies:
   provider: ^6.1.2
   fl_chart: ^0.68.0
   intl: ^0.18.1
+  percent_indicator: ^4.2.3
 
 dev_dependencies:
   flutter_test:
