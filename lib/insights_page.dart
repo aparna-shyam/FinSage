@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finsage/services/news_service.dart';
+import 'package:finsage/services/insights_service.dart'; // ✅ uses InsightsService
 import 'package:url_launcher/url_launcher.dart';
 
 class InsightsPage extends StatefulWidget {
@@ -15,6 +16,8 @@ class _InsightsPageState extends State<InsightsPage> {
   bool _receiveSuggestions = false;
   bool _isLoading = true;
 
+  final InsightsService _insightsService = InsightsService();
+
   @override
   void initState() {
     super.initState();
@@ -23,16 +26,21 @@ class _InsightsPageState extends State<InsightsPage> {
 
   Future<void> _checkAndFetchData() async {
     final user = FirebaseAuth.instance.currentUser;
+
     if (user != null) {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (userDoc.exists) {
-        final data = userDoc.data();
+      try {
+        final userDoc =
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
         if (mounted) {
           setState(() {
-            _receiveSuggestions = data?['receiveSuggestions'] ?? false;
+            _receiveSuggestions = userDoc.data()?['receiveSuggestions'] ?? false;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
             _isLoading = false;
           });
         }
@@ -71,10 +79,10 @@ class _InsightsPageState extends State<InsightsPage> {
 
     if (!_receiveSuggestions) {
       return Scaffold(
-        backgroundColor: const Color(0xFFECE2D2), // Set background color
+        backgroundColor: const Color(0xFFECE2D2),
         appBar: AppBar(
           title: const Text('Financial Insights'),
-          backgroundColor: const Color(0xFFD9641E), // Orange app bar
+          backgroundColor: const Color(0xFFD9641E),
           elevation: 0,
           automaticallyImplyLeading: false,
         ),
@@ -92,10 +100,10 @@ class _InsightsPageState extends State<InsightsPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2), // Set background color
+      backgroundColor: const Color(0xFFECE2D2),
       appBar: AppBar(
         title: const Text('Financial Insights'),
-        backgroundColor: const Color(0xFFD9641E), // Orange app bar
+        backgroundColor: const Color(0xFFD9641E),
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -107,7 +115,7 @@ class _InsightsPageState extends State<InsightsPage> {
             children: [
               _buildNewsAndTipsCard(textColor, cardColor),
               const SizedBox(height: 20),
-              _buildInvestmentSuggestionsCard(textColor, cardColor),
+              _buildSpendingInsightsCard(textColor, cardColor),
             ],
           ),
         ),
@@ -115,8 +123,8 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
+  /// 📰 News & Tips (from NewsService)
   Widget _buildNewsAndTipsCard(Color textColor, Color? cardColor) {
-    // Change to white
     final Color whiteCard = Colors.white;
 
     return FutureBuilder<List<Map<String, String>>>(
@@ -136,7 +144,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
         return Container(
           decoration: BoxDecoration(
-            color: whiteCard, // Changed to white
+            color: whiteCard,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -190,7 +198,8 @@ class _InsightsPageState extends State<InsightsPage> {
                                 item['text']!,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  decoration: item['url']!.isNotEmpty
+                                  decoration: (item['url'] != null &&
+                                          item['url']!.isNotEmpty)
                                       ? TextDecoration.underline
                                       : TextDecoration.none,
                                   color: textColor,
@@ -211,12 +220,27 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget _buildInvestmentSuggestionsCard(Color textColor, Color? cardColor) {
-    // Change to white
+  /// 💰 Spending Insights (from InsightsService)
+  Widget _buildSpendingInsightsCard(Color textColor, Color? cardColor) {
     final Color whiteCard = Colors.white;
 
-    return FutureBuilder<List<String>>(
-      future: NewsService().fetchInvestmentSuggestions(),
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: whiteCard,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Text(
+          "Please sign in to see your spending insights.",
+          style: TextStyle(fontSize: 16, color: Colors.red),
+        ),
+      );
+    }
+
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _insightsService.analyzeSpending(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -224,15 +248,22 @@ class _InsightsPageState extends State<InsightsPage> {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No investment suggestions available.');
+        if (!snapshot.hasData) {
+          return const Text('No spending data available.');
         }
 
-        final suggestions = snapshot.data!;
+        final data = snapshot.data!;
+        final double totalThis = (data['totalThisMonth'] ?? 0.0).toDouble();
+        final double totalLast = (data['totalLastMonth'] ?? 0.0).toDouble();
+        final double percentChange = (data['percentChange'] ?? 0.0).toDouble();
+        final Map<String, double> categoryTotals =
+            Map<String, double>.from(data['categoryTotals'] ?? {});
+        final List<String> suggestions =
+            List<String>.from(data['suggestions'] ?? []);
 
         return Container(
           decoration: BoxDecoration(
-            color: whiteCard, // Changed to white
+            color: whiteCard,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -259,7 +290,7 @@ class _InsightsPageState extends State<InsightsPage> {
                       Icon(Icons.trending_up, color: textColor, size: 24),
                       const SizedBox(width: 8),
                       Text(
-                        'Investment Suggestions',
+                        'Spending Insights',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -269,19 +300,56 @@ class _InsightsPageState extends State<InsightsPage> {
                     ],
                   ),
                   Divider(color: textColor, height: 20),
+                  Text("Total This Month: ₹${totalThis.toStringAsFixed(2)}",
+                      style: TextStyle(fontSize: 16, color: textColor)),
+                  const SizedBox(height: 4),
+                  Text("Last Month: ₹${totalLast.toStringAsFixed(2)}",
+                      style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8))),
+                  const SizedBox(height: 6),
+                  Text(
+                    totalLast > 0
+                        ? "Change: ${percentChange.toStringAsFixed(1)}%"
+                        : (totalThis > 0
+                            ? "New activity this month"
+                            : "No activity"),
+                    style: TextStyle(fontSize: 14, color: textColor),
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (categoryTotals.isNotEmpty) ...[
+                    Text("Category breakdown:",
+                        style: TextStyle(fontSize: 16, color: textColor)),
+                    const SizedBox(height: 8),
+                    ...categoryTotals.entries.map((e) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text("${e.key}",
+                                    style: TextStyle(color: textColor)),
+                              ),
+                              Text("₹${e.value.toStringAsFixed(2)}",
+                                  style: TextStyle(color: textColor)),
+                            ],
+                          ),
+                        )),
+                    const SizedBox(height: 12),
+                  ],
+
+                  Text("Suggestions:",
+                      style: TextStyle(fontSize: 16, color: textColor)),
+                  const SizedBox(height: 6),
                   ...suggestions.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    (s) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.arrow_right, size: 16, color: textColor),
+                          Icon(Icons.circle, size: 8, color: textColor),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
-                              item,
-                              style: TextStyle(fontSize: 14, color: textColor),
-                            ),
+                            child: Text(s,
+                                style: TextStyle(fontSize: 14, color: textColor)),
                           ),
                         ],
                       ),

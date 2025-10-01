@@ -13,7 +13,7 @@ import 'package:finsage/goals_page.dart';
 import 'package:finsage/profile_page.dart';
 import 'package:finsage/spending_report_page.dart';
 import 'package:finsage/insights_page.dart';
-import 'package:finsage/category_selection_page.dart'; // Import the CategorySelectionPage
+import 'package:finsage/category_selection_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -89,6 +89,7 @@ class _DashboardHome extends StatefulWidget {
 class _DashboardHomeState extends State<_DashboardHome> {
   String _userName = '';
   double _currentBalance = 0;
+  double _totalSpent = 0; // Added: Track spending separately
   double _monthlyBudget = 15000;
   Map<String, double> _monthlySpending = {};
   List<Map<String, dynamic>> _recentTransactions = [];
@@ -117,10 +118,15 @@ class _DashboardHomeState extends State<_DashboardHome> {
           .collection('users')
           .doc(currentUser.uid)
           .get();
+      
+      double initialBalance = 0; // Added: Store initial balance
+      
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
         _userName = data['name'] ?? 'User';
         _monthlyBudget = (data['monthlyBudget'] as num?)?.toDouble() ?? 15000;
+        // Get initial balance from user profile, default to monthly budget if not set
+        initialBalance = (data['initialBalance'] as num?)?.toDouble() ?? _monthlyBudget;
       }
 
       // Fetch current month's spending
@@ -144,7 +150,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
           ifAbsent: () => amount,
         );
       }
-      _currentBalance = totalSpending;
+      
+      // FIXED: Store spending and calculate actual balance
+      _totalSpent = totalSpending;
+      _currentBalance = initialBalance - totalSpending;
 
       // Fetch recent transactions
       final transactionsSnapshot = await FirebaseFirestore.instance
@@ -191,7 +200,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.menu), // Hamburger icon
+          icon: const Icon(Icons.menu),
           onPressed: () {
             // You can open a drawer or add functionality
           },
@@ -201,9 +210,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none), // Bell icon
+            icon: const Icon(Icons.notifications_none),
             onPressed: () {
-              // Add notification functionality here
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Notifications tapped')),
               );
@@ -238,7 +246,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ),
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
-                        value: _currentBalance / _monthlyBudget,
+                        value: _totalSpent / _monthlyBudget, // FIXED: Use _totalSpent for progress
                         backgroundColor: Colors.grey.shade300,
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Colors.green,
@@ -247,7 +255,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Spent this month: ${_formatCurrency(_currentBalance)} / ${_formatCurrency(_monthlyBudget)}',
+                        'Spent this month: ${_formatCurrency(_totalSpent)} / ${_formatCurrency(_monthlyBudget)}', // FIXED: Use _totalSpent
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],

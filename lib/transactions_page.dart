@@ -68,46 +68,72 @@ class _TransactionsPageState extends State<TransactionsPage> {
     }
   }
 
-  // Helper to aggregate transactions for plotting
+  // FIXED: Helper to aggregate transactions for plotting
   Map<String, double> _aggregateTransactions(
     List<QueryDocumentSnapshot> transactions,
     String filter,
   ) {
-    Map<String, double> data = {};
+    Map<DateTime, double> dataWithDates = {};
+    
     for (var doc in transactions) {
       final date = (doc['date'] as Timestamp).toDate();
-      String key;
+      DateTime key;
+      
       switch (filter) {
         case 'Today':
-          key = DateFormat('hh a').format(date); // Hourly
+          // Group by 10-minute intervals for better granularity
+          int tenMinInterval = (date.minute ~/ 10) * 10;
+          key = DateTime(date.year, date.month, date.day, date.hour, tenMinInterval);
           break;
         case 'This Week':
-          key = DateFormat('EEE').format(date); // Day of week
+          // Group by day
+          key = DateTime(date.year, date.month, date.day);
           break;
         case 'This Month':
-          key = DateFormat('d MMM').format(date); // Day of month
+          // Group by day
+          key = DateTime(date.year, date.month, date.day);
           break;
         case 'This Year':
-          key = DateFormat('MMM').format(date); // Month
+          // Group by month
+          key = DateTime(date.year, date.month);
           break;
         case 'All Time':
         default:
-          key = DateFormat('y').format(date); // Year
+          // Group by year
+          key = DateTime(date.year);
       }
-      data[key] = (data[key] ?? 0) + (doc['amount'] as num).toDouble();
+      
+      dataWithDates[key] = (dataWithDates[key] ?? 0) + (doc['amount'] as num).toDouble();
     }
-    // Sort keys chronologically
-    var sortedKeys = data.keys.toList()
-      ..sort((a, b) {
-        try {
-          final da = DateFormat('d MMM').parse(a, true);
-          final db = DateFormat('d MMM').parse(b, true);
-          return da.compareTo(db);
-        } catch (_) {
-          return a.compareTo(b);
-        }
-      });
-    return {for (var k in sortedKeys) k: data[k]!};
+    
+    // Sort by DateTime and convert to display strings
+    var sortedEntries = dataWithDates.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    
+    Map<String, double> result = {};
+    for (var entry in sortedEntries) {
+      String displayKey;
+      switch (filter) {
+        case 'Today':
+          displayKey = DateFormat('hh a').format(entry.key);
+          break;
+        case 'This Week':
+          displayKey = DateFormat('EEE').format(entry.key);
+          break;
+        case 'This Month':
+          displayKey = DateFormat('d MMM').format(entry.key);
+          break;
+        case 'This Year':
+          displayKey = DateFormat('MMM').format(entry.key);
+          break;
+        case 'All Time':
+        default:
+          displayKey = DateFormat('y').format(entry.key);
+      }
+      result[displayKey] = entry.value;
+    }
+    
+    return result;
   }
 
   @override
@@ -232,7 +258,16 @@ class _TransactionsPageState extends State<TransactionsPage> {
                               gridData: FlGridData(show: true),
                               titlesData: FlTitlesData(
                                 leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: true),
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 50,
+                                    getTitlesWidget: (value, meta) {
+                                      return Text(
+                                        '₹${(value / 1000).toStringAsFixed(0)}k',
+                                        style: const TextStyle(fontSize: 10),
+                                      );
+                                    },
+                                  ),
                                 ),
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
