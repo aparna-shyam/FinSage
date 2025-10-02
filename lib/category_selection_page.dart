@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'item_selection_page.dart';
+import 'receipt_scanner_page.dart'; // Add this import
 
 class CategorySelectionPage extends StatelessWidget {
   const CategorySelectionPage({super.key});
@@ -71,10 +72,10 @@ class CategorySelectionPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2), // Set background color
+      backgroundColor: const Color(0xFFECE2D2),
       appBar: AppBar(
         title: const Text('Choose a Spending Category'),
-        backgroundColor: const Color(0xFFD9641E), // Orange app bar
+        backgroundColor: const Color(0xFFD9641E),
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -87,10 +88,45 @@ class CategorySelectionPage extends StatelessWidget {
               'Choose a Spending Category',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.black, // Make heading black for contrast
+                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            
+            // Scan Receipt Button
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ReceiptScannerPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.document_scanner, size: 28),
+                label: const Text(
+                  'Scan Receipt',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B5B95),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 4,
+                ),
+              ),
+            ),
+            
+            const Divider(height: 24, thickness: 2),
+            
+            const SizedBox(height: 8),
+            
             Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -133,7 +169,7 @@ class CategorySelectionPage extends StatelessWidget {
         );
       },
       child: Card(
-        color: Colors.white, // White card background
+        color: Colors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Column(

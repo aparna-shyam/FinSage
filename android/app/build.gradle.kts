@@ -12,7 +12,7 @@ android {
     namespace = "com.example.finsage_ui"
     compileSdk = flutter.compileSdkVersion
 
-    // 🔧 Force Firebase-compatible NDK version
+    // 🔧 Firebase-compatible NDK version
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -24,14 +24,10 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    defaultConfig {
-        // Unique app ID
+defaultConfig {
         applicationId = "com.example.finsage_ui"
-
-        // 🔧 Firebase requires minSdk >= 23
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-
+        minSdkVersion(23) 
+        targetSdkVersion(flutter.targetSdkVersion)
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
