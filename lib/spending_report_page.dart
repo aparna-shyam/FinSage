@@ -21,6 +21,17 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
     return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
   }
 
+  // Compact currency format for chart axes
+  String _formatCompactCurrency(double amount) {
+    if (amount >= 100000) {
+      return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    } else if (amount >= 1000) {
+      return '₹${(amount / 1000).toStringAsFixed(1)}K';
+    } else {
+      return '₹${amount.toStringAsFixed(0)}';
+    }
+  }
+
   // New helper to get date range label
   String _getDateRangeLabel(TimePeriod period) {
     final now = DateTime.now();
@@ -216,8 +227,8 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
       (value, element) => value > element ? value : element,
     );
 
-    return AspectRatio(
-      aspectRatio: 1.5,
+    return SizedBox(
+      height: 300,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -228,29 +239,35 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                reservedSize: 40,
                 getTitlesWidget: (value, meta) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      categories[value.toInt()],
-                      style: Theme.of(context).textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                  );
+                  if (value.toInt() >= 0 && value.toInt() < categories.length) {
+                    final category = categories[value.toInt()];
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        category.length > 8 ? '${category.substring(0, 7)}.' : category,
+                        style: const TextStyle(fontSize: 10),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
                 },
               ),
             ),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                reservedSize: 50,
                 getTitlesWidget: (value, meta) {
                   return Text(
-                    _formatCurrency(value),
-                    style: Theme.of(context).textTheme.bodySmall,
+                    _formatCompactCurrency(value),
+                    style: const TextStyle(fontSize: 10),
                   );
                 },
                 interval: maxY / 5,
-                reservedSize: 40,
               ),
             ),
             topTitles: const AxisTitles(
@@ -265,7 +282,7 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
             show: true,
             border: Border(
               bottom:
-                  BorderSide(color: Theme.of(context).dividerColor, width: 2),
+                  BorderSide(color: Colors.grey.shade300, width: 2),
             ),
           ),
         ),

@@ -32,7 +32,9 @@ dependencies:
   intl: ^0.18.1
   percent_indicator: ^4.2.3
   google_mlkit_text_recognition: ^0.13.0
+  speech_to_text: ^7.0.0  # Try latest version
   permission_handler: ^11.0.1
+  
 
 dev_dependencies:
   flutter_test:
