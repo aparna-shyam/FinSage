@@ -35,7 +35,6 @@ class _GoalsPageState extends State<GoalsPage> {
     if (currentUser == null) return;
 
     try {
-      // ✅ Save inside user’s subcollection for consistent querying
       await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -43,6 +42,7 @@ class _GoalsPageState extends State<GoalsPage> {
           .add({
         'goal': _goalController.text,
         'targetAmount': double.tryParse(_amountController.text) ?? 0,
+        'currentAmount': 0.0, // Initialize current savings
         'targetDate': _selectedDate,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -55,12 +55,120 @@ class _GoalsPageState extends State<GoalsPage> {
     }
   }
 
+  Future<void> _addSavings(String goalId, String goalName, double currentAmount, double targetAmount) async {
+    final TextEditingController savingsController = TextEditingController();
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add Savings to "$goalName"'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Current: ${NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(currentAmount)}',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            Text(
+              'Target: ${NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(targetAmount)}',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: savingsController,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Amount to Add',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.add_circle_outline),
+                prefixText: '₹ ',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6B5B95),
+            ),
+            child: const Text('Add Savings'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && savingsController.text.isNotEmpty) {
+      final amount = double.tryParse(savingsController.text) ?? 0;
+      if (amount > 0) {
+        await _updateGoalSavings(goalId, currentAmount + amount);
+      }
+    }
+    savingsController.dispose();
+  }
+
+  Future<void> _updateGoalSavings(String goalId, double newAmount) async {
+    final currentUser = user;
+    if (currentUser == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('goals')
+          .doc(goalId)
+          .update({
+        'currentAmount': newAmount,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✓ Savings added successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating savings: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _viewSavingsHistory(String goalId, String goalName) async {
+    // Future enhancement: Show history of savings added
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Savings History: $goalName'),
+        content: const Text('Savings history feature coming soon!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 3650)), // 10 years
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
     if (picked != null) {
       setState(() {
@@ -120,8 +228,7 @@ class _GoalsPageState extends State<GoalsPage> {
                               ? 'Select Date'
                               : DateFormat('d MMM y').format(_selectedDate!),
                           style: TextStyle(
-                            color:
-                                _selectedDate == null ? Colors.grey : Colors.black,
+                            color: _selectedDate == null ? Colors.grey : Colors.black,
                           ),
                         ),
                       ),
@@ -172,8 +279,7 @@ class _GoalsPageState extends State<GoalsPage> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content:
-                      Text('Could not understand. Try: "Save 50000 for vacation"'),
+                  content: Text('Could not understand. Try: "Save 50000 for vacation"'),
                   duration: Duration(seconds: 3),
                 ),
               );
@@ -230,7 +336,6 @@ class _GoalsPageState extends State<GoalsPage> {
 
     if (confirmed == true) {
       try {
-        // ✅ Store voice goal inside user’s subcollection
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -238,6 +343,7 @@ class _GoalsPageState extends State<GoalsPage> {
             .add({
           'goal': data.name ?? 'Savings Goal',
           'targetAmount': data.targetAmount,
+          'currentAmount': 0.0, // Initialize current savings
           'targetDate': data.targetDate,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -311,7 +417,6 @@ class _GoalsPageState extends State<GoalsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        // ✅ Stream now reads from the same user subcollection
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('users')
@@ -361,12 +466,18 @@ class _GoalsPageState extends State<GoalsPage> {
               itemCount: goals.length,
               itemBuilder: (context, index) {
                 final goalData = goals[index].data() as Map<String, dynamic>;
+                final goalId = goals[index].id;
                 final goalName = goalData['goal'] ?? 'Unnamed Goal';
-                final targetAmount =
-                    (goalData['targetAmount'] as num?)?.toDouble() ?? 0;
+                final targetAmount = (goalData['targetAmount'] as num?)?.toDouble() ?? 0;
+                final currentAmount = (goalData['currentAmount'] as num?)?.toDouble() ?? 0;
                 final targetDate = goalData['targetDate'] != null
                     ? (goalData['targetDate'] as Timestamp).toDate()
                     : null;
+
+                // Calculate progress
+                final progress = targetAmount > 0 ? currentAmount / targetAmount : 0.0;
+                final remainingAmount = targetAmount - currentAmount;
+                final isCompleted = currentAmount >= targetAmount;
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -374,114 +485,236 @@ class _GoalsPageState extends State<GoalsPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6B5B95).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.flag,
-                        color: Color(0xFF6B5B95),
-                        size: 28,
-                      ),
-                    ),
-                    title: Text(
-                      goalName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        Row(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? Colors.green.withOpacity(0.1)
+                                : const Color(0xFF6B5B95).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isCompleted ? Icons.check_circle : Icons.flag,
+                            color: isCompleted ? Colors.green : const Color(0xFF6B5B95),
+                            size: 28,
+                          ),
+                        ),
+                        title: Text(
+                          goalName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.currency_rupee,
-                              size: 16,
-                              color: Colors.green,
+                            const SizedBox(height: 12),
+                            // Progress bar
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: progress > 1 ? 1 : progress,
+                                backgroundColor: Colors.grey[300],
+                                color: isCompleted ? Colors.green : const Color(0xFF6B5B95),
+                                minHeight: 8,
+                              ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Target: ${NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(targetAmount)}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(height: 8),
+                            // Current vs Target
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Saved',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      NumberFormat.currency(locale: 'en_IN', symbol: '₹')
+                                          .format(currentAmount),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${(progress * 100).toStringAsFixed(0)}%',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: isCompleted ? Colors.green : Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Target',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      NumberFormat.currency(locale: 'en_IN', symbol: '₹')
+                                          .format(targetAmount),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF6B5B95),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            if (!isCompleted) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'Remaining: ${NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(remainingAmount)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ] else ...[
+                              const SizedBox(height: 6),
+                              const Text(
+                                '🎉 Goal Achieved!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            if (targetDate != null) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 14,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Target: ${DateFormat('d MMM y').format(targetDate)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        trailing: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) async {
+                            if (value == 'delete') {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Goal'),
+                                  content: Text(
+                                      'Are you sure you want to delete "$goalName"?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true) {
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(currentUser.uid)
+                                    .collection('goals')
+                                    .doc(goalId)
+                                    .delete();
+
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Goal deleted'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Delete Goal'),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        if (targetDate != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: Colors.blue,
+                      ),
+                      // Add Savings Button
+                      if (!isCompleted)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _addSavings(
+                                goalId,
+                                goalName,
+                                currentAmount,
+                                targetAmount,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'By ${DateFormat('d MMM y').format(targetDate)}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.blue,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6B5B95),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                            ],
+                              icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                              label: const Text(
+                                'Add Savings',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ),
-                        ],
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Goal'),
-                            content:
-                                Text('Are you sure you want to delete "$goalName"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(currentUser.uid)
-                              .collection('goals')
-                              .doc(goals[index].id)
-                              .delete();
-
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Goal deleted'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
+                        ),
+                    ],
                   ),
                 );
               },
@@ -493,7 +726,7 @@ class _GoalsPageState extends State<GoalsPage> {
   }
 }
 
-// Voice Input Dialog Widget (unchanged)
+// Voice Input Dialog Widget
 class VoiceInputDialog extends StatefulWidget {
   final VoiceInputService voiceService;
   final Function(String) onResult;
@@ -521,8 +754,10 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
   @override
   void initState() {
     super.initState();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
   }
 
   @override

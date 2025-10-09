@@ -65,18 +65,21 @@ class _DashboardPageState extends State<DashboardPage> {
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CategorySelectionPage(),
-            ),
-          );
-        },
-        backgroundColor: const Color(0xFF6B5B95),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // Only show FAB for Home (0) and Transactions (1) pages
+      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CategorySelectionPage(),
+                  ),
+                );
+              },
+              backgroundColor: const Color(0xFF6B5B95),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null, // Hide FAB for other pages (Budget, Goals, Insights, Profile)
     );
   }
 }
@@ -89,7 +92,7 @@ class _DashboardHome extends StatefulWidget {
 class _DashboardHomeState extends State<_DashboardHome> {
   String _userName = '';
   double _currentBalance = 0;
-  double _totalSpent = 0; // Added: Track spending separately
+  double _totalSpent = 0;
   double _monthlyBudget = 15000;
   Map<String, double> _monthlySpending = {};
   List<Map<String, dynamic>> _recentTransactions = [];
@@ -119,13 +122,12 @@ class _DashboardHomeState extends State<_DashboardHome> {
           .doc(currentUser.uid)
           .get();
       
-      double initialBalance = 0; // Added: Store initial balance
+      double initialBalance = 0;
       
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
         _userName = data['name'] ?? 'User';
         _monthlyBudget = (data['monthlyBudget'] as num?)?.toDouble() ?? 15000;
-        // Get initial balance from user profile, default to monthly budget if not set
         initialBalance = (data['initialBalance'] as num?)?.toDouble() ?? _monthlyBudget;
       }
 
@@ -151,7 +153,6 @@ class _DashboardHomeState extends State<_DashboardHome> {
         );
       }
       
-      // FIXED: Store spending and calculate actual balance
       _totalSpent = totalSpending;
       _currentBalance = initialBalance - totalSpending;
 
@@ -246,7 +247,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ),
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
-                        value: _totalSpent / _monthlyBudget, // FIXED: Use _totalSpent for progress
+                        value: _totalSpent / _monthlyBudget,
                         backgroundColor: Colors.grey.shade300,
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Colors.green,
@@ -255,7 +256,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Spent this month: ${_formatCurrency(_totalSpent)} / ${_formatCurrency(_monthlyBudget)}', // FIXED: Use _totalSpent
+                        'Spent this month: ${_formatCurrency(_totalSpent)} / ${_formatCurrency(_monthlyBudget)}',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
