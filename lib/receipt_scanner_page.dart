@@ -6,6 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
+// 🍊 Define the Orange color for the buttons and main theme
+const Color _orangeColor = Color(0xFFD9641E);
+// 💡 Define the Light Background color for the page body
+const Color _lightBackgroundColor = Color(0xFFECE2D2);
+
 class ReceiptScannerPage extends StatefulWidget {
   const ReceiptScannerPage({super.key});
 
@@ -63,9 +68,9 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
         await _processImage();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
     }
   }
 
@@ -75,7 +80,9 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
     try {
       final inputImage = InputImage.fromFile(_image!);
       final textRecognizer = TextRecognizer();
-      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+      final RecognizedText recognizedText = await textRecognizer.processImage(
+        inputImage,
+      );
 
       setState(() {
         _extractedText = recognizedText.text;
@@ -86,9 +93,9 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
 
       await textRecognizer.close();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error processing image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error processing image: $e')));
     } finally {
       setState(() {
         _isProcessing = false;
@@ -100,19 +107,35 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
   String _detectCategory(String text) {
     text = text.toLowerCase();
 
-    if (text.contains("milk") || text.contains("bread") || text.contains("supermarket") || text.contains("grocery")) {
+    if (text.contains("milk") ||
+        text.contains("bread") ||
+        text.contains("supermarket") ||
+        text.contains("grocery")) {
       return "Grocery";
-    } else if (text.contains("uber") || text.contains("ola") || text.contains("bus") || text.contains("train")) {
+    } else if (text.contains("uber") ||
+        text.contains("ola") ||
+        text.contains("bus") ||
+        text.contains("train")) {
       return "Transportation";
-    } else if (text.contains("movie") || text.contains("theatre") || text.contains("netflix")) {
+    } else if (text.contains("movie") ||
+        text.contains("theatre") ||
+        text.contains("netflix")) {
       return "Entertainment";
-    } else if (text.contains("restaurant") || text.contains("cafe") || text.contains("food")) {
+    } else if (text.contains("restaurant") ||
+        text.contains("cafe") ||
+        text.contains("food")) {
       return "Food & Dining";
-    } else if (text.contains("hospital") || text.contains("pharmacy") || text.contains("clinic")) {
+    } else if (text.contains("hospital") ||
+        text.contains("pharmacy") ||
+        text.contains("clinic")) {
       return "Healthcare";
-    } else if (text.contains("electricity") || text.contains("water bill") || text.contains("internet")) {
+    } else if (text.contains("electricity") ||
+        text.contains("water bill") ||
+        text.contains("internet")) {
       return "Bills & Utilities";
-    } else if (text.contains("mall") || text.contains("shopping") || text.contains("store")) {
+    } else if (text.contains("mall") ||
+        text.contains("shopping") ||
+        text.contains("store")) {
       return "Shopping";
     } else {
       return "Other";
@@ -121,13 +144,18 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
 
   void _parseReceiptData(String text) {
     // Extract amount
-    final amountRegex = RegExp(r'(?:₹|rs\.?|inr)?\s*(\d{1,6}(?:[.,]\d{2})?)', caseSensitive: false);
+    final amountRegex = RegExp(
+      r'(?:₹|rs\.?|inr)?\s*(\d{1,6}(?:[.,]\d{2})?)',
+      caseSensitive: false,
+    );
     final matches = amountRegex.allMatches(text);
     double? foundAmount;
 
     final lines = text.toLowerCase().split('\n');
     for (var line in lines) {
-      if (line.contains('total') || line.contains('amount') || line.contains('grand')) {
+      if (line.contains('total') ||
+          line.contains('amount') ||
+          line.contains('grand')) {
         final amountMatch = amountRegex.firstMatch(line);
         if (amountMatch != null) {
           final amountStr = amountMatch.group(1)?.replaceAll(',', '.');
@@ -199,9 +227,9 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
   Future<void> _saveTransaction() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not logged in')));
       return;
     }
 
@@ -238,18 +266,26 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving transaction: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving transaction: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Keep page body background as light beige
+      backgroundColor: _lightBackgroundColor,
       appBar: AppBar(
-        title: const Text('Scan Receipt'),
-        backgroundColor: const Color(0xFF6B5B95),
+        title: const Text(
+          'Scan Receipt',
+          style: TextStyle(
+            color: Colors.white,
+          ), // App Bar title text color set to white
+        ),
+        // AppBar background reverted to orange
+        backgroundColor: _orangeColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -287,11 +323,16 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
+                    icon: const Icon(Icons.camera_alt, color: Colors.white),
+                    label: const Text(
+                      'Camera',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B5B95),
+                      // Buttons remain orange
+                      backgroundColor: _orangeColor,
                       padding: const EdgeInsets.all(16),
+                      foregroundColor: Colors.white,
                     ),
                   ),
                 ),
@@ -299,11 +340,16 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
+                    icon: const Icon(Icons.photo_library, color: Colors.white),
+                    label: const Text(
+                      'Gallery',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B5B95),
+                      // Buttons remain orange
+                      backgroundColor: _orangeColor,
                       padding: const EdgeInsets.all(16),
+                      foregroundColor: Colors.white,
                     ),
                   ),
                 ),
@@ -353,7 +399,7 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
@@ -378,11 +424,14 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
               ListTile(
                 title: const Text('Date'),
                 subtitle: Text(
-                  DateFormat('MMM d, y').format(_detectedDate ?? DateTime.now()),
+                  DateFormat(
+                    'MMM d, y',
+                  ).format(_detectedDate ?? DateTime.now()),
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
-                  final picked = await showDatePicker(
+                  // ➡️ Applying Theme to the DatePicker for color change
+                  final picked = await showThemeDatePicker(
                     context: context,
                     initialDate: _detectedDate ?? DateTime.now(),
                     firstDate: DateTime(2020),
@@ -401,12 +450,14 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
               ElevatedButton(
                 onPressed: _saveTransaction,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6B5B95),
+                  // Button remains orange
+                  backgroundColor: _orangeColor,
                   padding: const EdgeInsets.all(16),
+                  foregroundColor: Colors.white,
                 ),
                 child: const Text(
                   'Save Transaction',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
 
@@ -433,6 +484,42 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
           ],
         ),
       ),
+    );
+  }
+
+  // ⭐️ New helper function to wrap showDatePicker with the theme ⭐️
+  Future<DateTime?> showThemeDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) {
+    return showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              // Header background color
+              primary: _orangeColor,
+              // Color of the selected date circle
+              onPrimary: Colors.white,
+              // Dialog background color
+              surface: Colors.white,
+              // Selected date text color (e.g., in the header)
+              onSurface: Colors.black,
+            ),
+            // Text button color (e.g., 'CANCEL', 'OK')
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: _orangeColor),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

@@ -58,7 +58,7 @@ class InsightsService {
       // If range query fails (e.g., date stored as string, or index needed), fallback:
       final snap = await base.get();
       final filtered = snap.docs.where((d) {
-        final data = d.data() as Map<String, dynamic>;
+        final data = d.data();
         return _docDateInRange(data, start, end);
       }).toList();
       return filtered;

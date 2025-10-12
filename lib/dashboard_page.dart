@@ -15,6 +15,14 @@ import 'package:finsage/spending_report_page.dart';
 import 'package:finsage/insights_page.dart';
 import 'package:finsage/category_selection_page.dart';
 
+// ⭐️ NEW IMPORT for Recurring Payments page (Placeholder) ⭐️
+import 'package:finsage/recurring_payments.dart';
+
+// 🍊 Define the Orange color for the theme
+const Color _orangeColor = Color(0xFFD9641E);
+// 💡 Define the Light Background color for the page body
+const Color _lightBackgroundColor = Color(0xFFECE2D2);
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -25,48 +33,134 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 0;
 
+  // 1. Add the new page to the list of pages
   final List<Widget> _pages = [
     _DashboardHome(),
     const TransactionsPage(),
+    const RecurringPaymentsPage(), // ⭐️ NEW: Recurring Payments Page ⭐️
     const BudgetPage(),
     const GoalsPage(),
     const InsightsPage(),
     const ProfilePage(),
   ];
 
+  // 2. Add the title for the new page
+  final List<String> _pageTitles = const [
+    'Home',
+    'Transactions',
+    'Recurring Payments', // ⭐️ NEW Title ⭐️
+    'Budget',
+    'Goals',
+    'Insights',
+    'Profile',
+  ];
+
+  // 3. Add the icon for the new page
+  final List<IconData> _pageIcons = const [
+    Icons.home,
+    Icons.swap_horiz,
+    Icons.autorenew, // ⭐️ NEW Icon (e.g., Autorenew) ⭐️
+    Icons.pie_chart,
+    Icons.star,
+    Icons.insights,
+    Icons.person,
+  ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    // Close the drawer after selection
+    Navigator.pop(context);
+  }
+
+  // ⭐️ Updated Widget for the Navigation Drawer ⭐️
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: _lightBackgroundColor,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          // Header using the Orange theme color
+          DrawerHeader(
+            decoration: const BoxDecoration(color: _orangeColor),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'FinSage Menu',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Navigate your finances',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          // List of navigation items
+          ...List.generate(_pages.length, (index) {
+            return ListTile(
+              leading: Icon(
+                _pageIcons[index],
+                color: _selectedIndex == index ? _orangeColor : Colors.black87,
+              ),
+              title: Text(
+                _pageTitles[index],
+                style: TextStyle(
+                  color: _selectedIndex == index
+                      ? _orangeColor
+                      : Colors.black87,
+                  fontWeight: _selectedIndex == index
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              onTap: () => _onItemTapped(index),
+            );
+          }),
+
+          // Divider and Sign Out option (Example of extra menu item)
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.grey),
+            title: const Text('Sign Out'),
+            onTap: () {
+              // Add sign out logic here
+              FirebaseAuth.instance.signOut();
+              Navigator.pop(context);
+              // You might want to navigate to a login page here
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Determine the index of the 'Recurring Payments' page dynamically
+    final recurringPaymentsIndex = _pageTitles.indexOf('Recurring Payments');
+
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.swap_horiz),
-            label: 'Transactions',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Goals'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.insights),
-            label: 'Insights',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF6B5B95),
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-      ),
-      // Only show FAB for Home (0) and Transactions (1) pages
-      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
+
+      // ⭐️ Add the Navigation Drawer ⭐️
+      drawer: _buildDrawer(),
+
+      // Removed BottomNavigationBar completely
+
+      // Only show FAB for Home (0), Transactions (1), and Recurring Payments
+      floatingActionButton:
+          (_selectedIndex == 0 ||
+              _selectedIndex == 1 ||
+              _selectedIndex == recurringPaymentsIndex) // Updated FAB logic
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
@@ -76,10 +170,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 );
               },
-              backgroundColor: const Color(0xFF6B5B95),
+              backgroundColor: _orangeColor,
               child: const Icon(Icons.add, color: Colors.white),
             )
-          : null, // Hide FAB for other pages (Budget, Goals, Insights, Profile)
+          : null, // Hide FAB for other pages
     );
   }
 }
@@ -94,8 +188,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
   double _currentBalance = 0;
   double _totalSpent = 0;
   double _monthlyBudget = 15000;
-  Map<String, double> _monthlySpending = {};
-  List<Map<String, dynamic>> _recentTransactions = [];
+  final Map<String, double> _monthlySpending = {};
+  Map<String, List<Map<String, dynamic>>> _groupedTransactions = {};
   bool _isLoading = true;
   String _apiTip = "Loading daily tip...";
 
@@ -106,6 +200,26 @@ class _DashboardHomeState extends State<_DashboardHome> {
   void initState() {
     super.initState();
     _fetchDashboardData();
+  }
+
+  // ⭐️ New grouping function ⭐️
+  Map<String, List<Map<String, dynamic>>> _groupTransactionsByDate(
+    List<Map<String, dynamic>> transactions,
+  ) {
+    Map<String, List<Map<String, dynamic>>> grouped = {};
+    // Format: 'EEEE, d MMMM yyyy' (e.g., 'Sunday, 12 October 2025')
+    final DateFormat formatter = DateFormat('EEEE, d MMMM yyyy');
+
+    for (var transaction in transactions) {
+      final date = (transaction['date'] as Timestamp).toDate();
+      final dateKey = formatter.format(date);
+
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(transaction);
+    }
+    return grouped;
   }
 
   Future<void> _fetchDashboardData() async {
@@ -121,19 +235,29 @@ class _DashboardHomeState extends State<_DashboardHome> {
           .collection('users')
           .doc(currentUser.uid)
           .get();
-      
+
       double initialBalance = 0;
-      
+
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
         _userName = data['name'] ?? 'User';
         _monthlyBudget = (data['monthlyBudget'] as num?)?.toDouble() ?? 15000;
-        initialBalance = (data['initialBalance'] as num?)?.toDouble() ?? _monthlyBudget;
+        initialBalance =
+            (data['initialBalance'] as num?)?.toDouble() ?? _monthlyBudget;
       }
 
-      // Fetch current month's spending
+      // Define date range for recent transactions (last 7 days)
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
+
+      // 🌟 Define start of 7-day filter 🌟
+      final sevenDaysAgo = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(const Duration(days: 7));
+
+      // Fetch current month's spending (used for budget progress)
       final spendingSnapshot = await FirebaseFirestore.instance
           .collection('spending')
           .where('userId', isEqualTo: currentUser.uid)
@@ -142,7 +266,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
 
       double totalSpending = 0;
       for (var doc in spendingSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
         final category = data['category'] as String? ?? 'Other';
         totalSpending += amount;
@@ -152,20 +276,25 @@ class _DashboardHomeState extends State<_DashboardHome> {
           ifAbsent: () => amount,
         );
       }
-      
+
       _totalSpent = totalSpending;
       _currentBalance = initialBalance - totalSpending;
 
-      // Fetch recent transactions
-      final transactionsSnapshot = await FirebaseFirestore.instance
+      // Fetch recent transactions (last 7 days)
+      final recentTransactionsSnapshot = await FirebaseFirestore.instance
           .collection('spending')
           .where('userId', isEqualTo: currentUser.uid)
+          // 🌟 Filter by last 7 days 🌟
+          .where('date', isGreaterThanOrEqualTo: sevenDaysAgo)
           .orderBy('date', descending: true)
-          .limit(4)
           .get();
-      _recentTransactions = transactionsSnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+
+      final recentTransactions = recentTransactionsSnapshot.docs
+          .map((doc) => doc.data())
           .toList();
+
+      // 🌟 Group transactions by date 🌟
+      _groupedTransactions = _groupTransactionsByDate(recentTransactions);
 
       // Fetch financial tips and investment suggestions
       final tips = await _newsService.fetchFinancialNewsAndTips();
@@ -187,6 +316,21 @@ class _DashboardHomeState extends State<_DashboardHome> {
     return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
   }
 
+  // ⭐️ Widget to build the Date Header
+  Widget _buildDateHeader(String dateKey) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+      child: Text(
+        dateKey,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: _orangeColor,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
@@ -198,20 +342,64 @@ class _DashboardHomeState extends State<_DashboardHome> {
       ..sort((a, b) => b.value.compareTo(a.value));
     final topThreeCategories = sortedSpending.take(3);
 
+    // Create a list of widgets from the grouped data (Headers + Tiles)
+    final List<Widget> datedTransactionList = [];
+    final sortedDateKeys = _groupedTransactions.keys.toList()
+      ..sort(
+        (a, b) => DateFormat(
+          'EEEE, d MMMM yyyy',
+        ).parse(b).compareTo(DateFormat('EEEE, d MMMM yyyy').parse(a)),
+      );
+
+    for (var dateKey in sortedDateKeys) {
+      final dateTransactions = _groupedTransactions[dateKey]!;
+      // Add the date header (e.g., 'Sunday, 12 October 2025')
+      datedTransactionList.add(_buildDateHeader(dateKey));
+
+      // Add all transactions for that date
+      datedTransactionList.addAll(
+        dateTransactions.map((transaction) {
+          final description = transaction['description'] ?? 'N/A';
+          final category = transaction['category'] ?? 'N/A';
+          final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            color: cardColor,
+            child: ListTile(
+              title: Text(
+                description,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(category), // Date removed, as it's in the header
+              trailing: Text(
+                _formatCurrency(amount),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.redAccent),
+              ),
+            ),
+          );
+        }),
+      );
+    }
+
     return Scaffold(
+      // ➡️ Scaffold background set to Light Beige
+      backgroundColor: _lightBackgroundColor,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // You can open a drawer or add functionality
-          },
+        // Remove leading IconButton here; it's automatically handled by Scaffold.drawer
+        title: Text(
+          'Hello, $_userName!',
+          style: const TextStyle(color: Colors.white),
         ),
-        title: Text('Hello, $_userName!'),
-        backgroundColor: const Color(0xFF6B5B95),
-        automaticallyImplyLeading: false,
+        // ➡️ AppBar background orange
+        backgroundColor: _orangeColor,
+        automaticallyImplyLeading:
+            true, // Set to true to automatically show hamburger icon
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none),
+            icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Notifications tapped')),
@@ -274,6 +462,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
               ...topThreeCategories.map((entry) {
                 final category = entry.key;
                 final spent = entry.value;
+                // Simple assumption: divide total budget among top categories
                 final budget = _monthlyBudget / topThreeCategories.length;
                 final progress = budget > 0 ? spent / budget : 0.0;
                 return Padding(
@@ -282,49 +471,34 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     lineHeight: 16.0,
                     percent: progress > 1.0 ? 1.0 : progress,
                     backgroundColor: Colors.grey.shade300,
-                    progressColor: progress > 1.0 ? Colors.red : Colors.purple,
+                    progressColor: progress > 1.0 ? Colors.red : _orangeColor,
                     barRadius: const Radius.circular(8),
                     center: Text(
                       "$category: ${_formatCurrency(spent)} / ${_formatCurrency(budget)}",
-                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                      style: const TextStyle(fontSize: 12, color: Colors.black),
                     ),
                   ),
                 );
               }),
               const SizedBox(height: 20),
 
-              // Recent Transactions
+              // Recent Transactions (Date-grouped)
               Text(
-                'Recent Transactions',
+                'Recent Transactions (Last 7 Days)',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 10),
-              if (_recentTransactions.isNotEmpty)
-                ..._recentTransactions.map((transaction) {
-                  final description = transaction['description'] ?? 'N/A';
-                  final category = transaction['category'] ?? 'N/A';
-                  final amount =
-                      (transaction['amount'] as num?)?.toDouble() ?? 0.0;
-                  final timestamp = (transaction['date'] as Timestamp).toDate();
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: cardColor,
-                    child: ListTile(
-                      title: Text(
-                        description,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        '$category - ${DateFormat('MMM d, y').format(timestamp)}',
-                      ),
-                      trailing: Text(
-                        _formatCurrency(amount),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: Colors.redAccent),
-                      ),
+              if (_groupedTransactions.isNotEmpty)
+                ...datedTransactionList
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(
+                    child: Text(
+                      'No transactions found in the last 7 days.',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  );
-                }),
+                  ),
+                ),
               const SizedBox(height: 20),
             ],
           ),

@@ -192,7 +192,7 @@ class _SpendingReportPageState extends State<SpendingReportPage> {
         final Color? buttonColor = isSelected
             ? const Color(0xFF6B5B95)
             : Theme.of(context).elevatedButtonTheme.style?.backgroundColor
-                ?.resolve({}) as Color?;
+                ?.resolve({});
 
         return ElevatedButton(
           onPressed: () {

@@ -550,7 +550,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedBillType,
+              initialValue: _selectedBillType,
               decoration: InputDecoration(
                 labelText: 'Select Bill Type',
                 border: OutlineInputBorder(
@@ -718,9 +718,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
 
   // Add this method to show the medical expense dialog
   void _showMedicalExpenseDialog() {
-    final TextEditingController _amountController = TextEditingController();
-    final TextEditingController _hospitalController = TextEditingController();
-    bool _isSavingMedical = false;
+    final TextEditingController amountController = TextEditingController();
+    final TextEditingController hospitalController = TextEditingController();
+    bool isSavingMedical = false;
 
     showDialog(
       context: context,
@@ -737,7 +737,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
-                      controller: _amountController,
+                      controller: amountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Bill Amount',
@@ -749,7 +749,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                     ),
                     const SizedBox(height: 16),
                     TextField(
-                      controller: _hospitalController,
+                      controller: hospitalController,
                       decoration: InputDecoration(
                         labelText: 'Hospital/Clinic',
                         border: OutlineInputBorder(
@@ -766,13 +766,13 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: _isSavingMedical
+                  onPressed: isSavingMedical
                       ? null
                       : () async {
                           final amount = double.tryParse(
-                            _amountController.text,
+                            amountController.text,
                           );
-                          final hospital = _hospitalController.text.trim();
+                          final hospital = hospitalController.text.trim();
                           if (amount == null ||
                               amount <= 0 ||
                               hospital.isEmpty) {
@@ -785,7 +785,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                             return;
                           }
                           setState(() {
-                            _isSavingMedical = true;
+                            isSavingMedical = true;
                           });
                           try {
                             await _firestoreService.addTransaction(
@@ -813,7 +813,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                           } finally {
                             if (mounted) {
                               setState(() {
-                                _isSavingMedical = false;
+                                isSavingMedical = false;
                               });
                             }
                           }
@@ -824,7 +824,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: _isSavingMedical
+                  child: isSavingMedical
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Add',
@@ -873,7 +873,7 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
       mainAxisSize: MainAxisSize.min,
       children: [
         DropdownButtonFormField<String>(
-          value: _selectedMembership,
+          initialValue: _selectedMembership,
           decoration: InputDecoration(
             labelText: 'Select Membership',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -1004,7 +1004,7 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
       mainAxisSize: MainAxisSize.min,
       children: [
         DropdownButtonFormField<String>(
-          value: _selectedBillType,
+          initialValue: _selectedBillType,
           decoration: InputDecoration(
             labelText: 'Select Bill Type',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),

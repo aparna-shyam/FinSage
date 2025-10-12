@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 import 'package:finsage/dashboard_page.dart';
 import 'package:finsage/signup_page.dart';
-import 'package:finsage/theme_provider.dart';
 import 'package:finsage/forgotpass.dart';
 
 class LoginPage extends StatefulWidget {
