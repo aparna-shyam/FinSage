@@ -86,23 +86,23 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
       switch (filter) {
         case 'Today':
-          int tenMinInterval = (date.minute ~/ 10) * 10;
-          key = DateTime(
-            date.year,
-            date.month,
-            date.day,
-            date.hour,
-            tenMinInterval,
-          );
+          // Group by hour
+          key = DateTime(date.year, date.month, date.day, date.hour);
           break;
         case 'This Week':
+          // Group by day
+          key = DateTime(date.year, date.month, date.day);
+          break;
         case 'This Month':
+          // Group by day
           key = DateTime(date.year, date.month, date.day);
           break;
         case 'This Year':
+          // Group by month
           key = DateTime(date.year, date.month);
           break;
         default:
+          // Group by year
           key = DateTime(date.year);
       }
 
@@ -118,19 +118,19 @@ class _TransactionsPageState extends State<TransactionsPage> {
       String label;
       switch (filter) {
         case 'Today':
-          label = DateFormat('hh a').format(entry.key);
+          label = DateFormat('ha').format(entry.key); // e.g. 2PM
           break;
         case 'This Week':
-          label = DateFormat('EEE').format(entry.key);
+          label = DateFormat('EEE').format(entry.key); // e.g. Mon
           break;
         case 'This Month':
-          label = DateFormat('d MMM').format(entry.key);
+          label = DateFormat('d MMM').format(entry.key); // e.g. 5 Oct
           break;
         case 'This Year':
-          label = DateFormat('MMM').format(entry.key);
+          label = DateFormat('MMM').format(entry.key); // e.g. Jan
           break;
         default:
-          label = DateFormat('y').format(entry.key);
+          label = DateFormat('y').format(entry.key); // e.g. 2025
       }
       result[label] = entry.value;
     }

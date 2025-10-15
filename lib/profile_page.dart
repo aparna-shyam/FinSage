@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
-import 'spending_report_page.dart';
 import 'notifications_page.dart';
 import 'financial_setup_page.dart';
 
@@ -220,13 +219,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _viewSpendingReport() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SpendingReportPage()),
-    );
-  }
-
   void _viewNotifications() {
     Navigator.push(
       context,
@@ -388,13 +380,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Set Income & Savings Goal',
                       color: _primaryColor,
                       onPressed: _openFinancialSetup,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildActionButton(
-                      icon: Icons.bar_chart,
-                      label: 'View Spending Report',
-                      color: _primaryColor,
-                      onPressed: _viewSpendingReport,
                     ),
                     const SizedBox(height: 12),
                     _buildActionButton(

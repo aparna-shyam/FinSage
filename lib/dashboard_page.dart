@@ -11,7 +11,6 @@ import 'package:finsage/transactions_page.dart';
 import 'package:finsage/budget_page.dart';
 import 'package:finsage/goals_page.dart';
 import 'package:finsage/profile_page.dart';
-import 'package:finsage/spending_report_page.dart';
 import 'package:finsage/insights_page.dart';
 import 'package:finsage/category_selection_page.dart';
 
@@ -400,7 +399,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
       }
 
       _totalSpent = totalSpending;
-      _currentBalance = initialBalance - totalSpending;
+      // FIX: Current balance should be monthly budget minus total spent
+      _currentBalance = _monthlyBudget - totalSpending;
 
       final recentTransactionsSnapshot = await FirebaseFirestore.instance
           .collection('spending')
