@@ -59,7 +59,22 @@ class RecurringPayment {
       'dueDetail': dueDetail,
       'isActive': isActive,
       'notes': notes,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt':
+          FieldValue.serverTimestamp(), // NOTE: Only for initial save, not for update
+    };
+  }
+
+  // Convert to a map for Firestore UPDATE
+  Map<String, dynamic> toUpdateMap() {
+    return {
+      'name': name,
+      'amount': amount,
+      'frequency': frequency,
+      'firstDueDate': Timestamp.fromDate(firstDueDate),
+      'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
+      'dueDetail': dueDetail,
+      'isActive': isActive,
+      'notes': notes,
     };
   }
 }
@@ -124,6 +139,20 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     }
   }
 
+  // ⭐️ NEW: Update function ⭐️
+  Future<void> _updatePayment(RecurringPayment payment) async {
+    if (currentUser == null) return;
+    try {
+      await _paymentsCollection.doc(payment.id).update(payment.toUpdateMap());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating payment: $e')));
+      }
+    }
+  }
+
   Future<void> _deletePaymentFromFirestore(String id) async {
     if (currentUser == null) return;
     try {
@@ -143,18 +172,9 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // DIALOG FUNCTION (Updated Save Logic)
+  // DIALOG FUNCTION - ADD
   // ---------------------------------------------------------------------------
   void _showAddRecurringPaymentDialog() {
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User not logged in. Cannot add payment.'),
-        ),
-      );
-      return;
-    }
-
     // Initial values for the dialog state
     String? selectedFrequency = 'Monthly';
     DateTime dueDate = DateTime.now();
@@ -168,12 +188,102 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     final amountController = TextEditingController();
     final notesController = TextEditingController();
 
+    _showPaymentDialog(
+      paymentToEdit: null,
+      selectedFrequency: selectedFrequency,
+      dueDate: dueDate,
+      endDate: endDate,
+      selectedDayOfMonth: selectedDayOfMonth,
+      selectedDayOfWeek: selectedDayOfWeek,
+      isActive: isActive,
+      nameController: nameController,
+      amountController: amountController,
+      notesController: notesController,
+      dialogTitle: 'Add Recurring Payment',
+      saveFunction: _savePayment,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // DIALOG FUNCTION - EDIT (Calls the unified dialog)
+  // ---------------------------------------------------------------------------
+  void _showEditRecurringPaymentDialog(RecurringPayment payment) {
+    // Initial values taken from the existing payment
+    String? selectedFrequency = payment.frequency;
+    DateTime dueDate = payment.firstDueDate;
+    DateTime? endDate = payment.endDate;
+    bool isActive = payment.isActive;
+
+    // Controllers for text fields
+    final nameController = TextEditingController(text: payment.name);
+    final amountController = TextEditingController(
+      text: payment.amount.toString(),
+    );
+    final notesController = TextEditingController(text: payment.notes ?? '');
+
+    // Determine due detail for initial state
+    int selectedDayOfMonth = 1;
+    String selectedDayOfWeek = 'Monday';
+
+    if (payment.frequency == 'Monthly' ||
+        payment.frequency == 'Quarterly' ||
+        payment.frequency == 'Annually') {
+      selectedDayOfMonth =
+          int.tryParse(payment.dueDetail) ?? dueDate.day.clamp(1, 28);
+    } else if (payment.frequency == 'Weekly' ||
+        payment.frequency == 'Bi-Weekly') {
+      selectedDayOfWeek = payment.dueDetail;
+    }
+
+    _showPaymentDialog(
+      paymentToEdit: payment,
+      selectedFrequency: selectedFrequency,
+      dueDate: dueDate,
+      endDate: endDate,
+      selectedDayOfMonth: selectedDayOfMonth,
+      selectedDayOfWeek: selectedDayOfWeek,
+      isActive: isActive,
+      nameController: nameController,
+      amountController: amountController,
+      notesController: notesController,
+      dialogTitle: 'Edit Recurring Payment',
+      saveFunction: _updatePayment,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // UNIFIED DIALOG BUILDER
+  // ---------------------------------------------------------------------------
+  void _showPaymentDialog({
+    RecurringPayment? paymentToEdit,
+    required String? selectedFrequency,
+    required DateTime dueDate,
+    required DateTime? endDate,
+    required int selectedDayOfMonth,
+    required String selectedDayOfWeek,
+    required bool isActive,
+    required TextEditingController nameController,
+    required TextEditingController amountController,
+    required TextEditingController notesController,
+    required String dialogTitle,
+    required Future<void> Function(RecurringPayment) saveFunction,
+  }) {
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not logged in. Cannot save payment.'),
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setStateInDialog) {
-            // Date picker function remains the same
+            // --- Helper Functions in Dialog Scope ---
+
             Future<void> _selectDate(bool isDueDate) async {
               final DateTime? picked = await showDatePicker(
                 context: context,
@@ -181,7 +291,9 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     ? dueDate
                     : (endDate ??
                           DateTime.now().add(const Duration(days: 365))),
-                firstDate: DateTime.now(),
+                firstDate: DateTime.now().subtract(
+                  const Duration(days: 365 * 5),
+                ), // Allow past dates for edit
                 lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
                 builder: (context, child) {
                   return Theme(
@@ -214,7 +326,6 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
               }
             }
 
-            // Day selector widget remains the same
             Widget _buildDueDaySelector() {
               if (selectedFrequency == 'Monthly' ||
                   selectedFrequency == 'Quarterly' ||
@@ -279,8 +390,10 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
               return const SizedBox.shrink();
             }
 
+            // --- Dialog Content ---
+
             return AlertDialog(
-              title: const Text('Add Recurring Payment'),
+              title: Text(dialogTitle),
               contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               actionsPadding: const EdgeInsets.all(8),
               content: SingleChildScrollView(
@@ -318,6 +431,17 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       onChanged: (String? newValue) {
                         setStateInDialog(() {
                           selectedFrequency = newValue;
+                          // Reset day detail based on new frequency
+                          if (newValue == 'Monthly' ||
+                              newValue == 'Quarterly' ||
+                              newValue == 'Annually') {
+                            selectedDayOfMonth = dueDate.day.clamp(1, 28);
+                          } else if (newValue == 'Weekly' ||
+                              newValue == 'Bi-Weekly') {
+                            selectedDayOfWeek = DateFormat(
+                              'EEEE',
+                            ).format(dueDate);
+                          }
                         });
                       },
                     ),
@@ -403,7 +527,9 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     }
 
                     final newPayment = RecurringPayment(
-                      id: 'temp', // ID will be assigned by Firestore
+                      id:
+                          paymentToEdit?.id ??
+                          'temp', // Use existing ID or 'temp'
                       name: nameController.text,
                       amount: double.tryParse(amountController.text) ?? 0.0,
                       frequency: selectedFrequency!,
@@ -422,12 +548,14 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     );
 
                     Navigator.of(context).pop();
-                    await _savePayment(newPayment); // Save to Firestore
+                    await saveFunction(
+                      newPayment,
+                    ); // Use the provided save/update function
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          '✅ Recurring payment "${newPayment.name}" saved!',
+                          '✅ Recurring payment "${newPayment.name}" ${paymentToEdit == null ? 'saved' : 'updated'}!',
                         ),
                       ),
                     );
@@ -435,9 +563,9 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _orangeColor,
                   ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    paymentToEdit == null ? 'Save' : 'Update',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -449,7 +577,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // DISPLAY WIDGET (Wrapped in Dismissible)
+  // DISPLAY WIDGET (Wrapped in Dismissible and GestureDetector)
   // ---------------------------------------------------------------------------
   Widget _buildPaymentTile(RecurringPayment payment) {
     final statusColor = payment.isActive
@@ -508,57 +636,57 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
             },
           );
         },
-        child: Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          elevation: 2,
-          child: ListTile(
-            leading: Icon(
-              Icons.calendar_month,
-              color: payment.isActive ? _orangeColor : Colors.grey,
-            ),
-            title: Text(
-              payment.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${payment.frequency} - $dueInfo'),
-                Text(
-                  'Next: ${DateFormat('dd MMM yyyy').format(payment.firstDueDate)}',
-                ),
-              ],
-            ),
-            trailing: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatCurrency(payment.amount),
-                  style: TextStyle(
-                    color: _orangeColor,
-                    fontWeight: FontWeight.bold,
+        // ⭐️ WRAP IN GESTURE DETECTOR FOR DOUBLE TAP ⭐️
+        child: GestureDetector(
+          onDoubleTap: () => _showEditRecurringPaymentDialog(payment),
+          child: Card(
+            margin: EdgeInsets
+                .zero, // Card needs margin of zero here since parent Padding handles it
+            elevation: 2,
+            child: ListTile(
+              leading: Icon(
+                Icons.calendar_month,
+                color: payment.isActive ? _orangeColor : Colors.grey,
+              ),
+              title: Text(
+                payment.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${payment.frequency} - $dueInfo'),
+                  Text(
+                    'Next: ${DateFormat('dd MMM yyyy').format(payment.firstDueDate)}',
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  statusText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: statusColor,
-                    fontWeight: FontWeight.w600,
+                ],
+              ),
+              trailing: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _formatCurrency(payment.amount),
+                    style: TextStyle(
+                      color: _orangeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: statusColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              // Removed onTap to prevent conflict, now using onDoubleTap
+              onTap: () {
+                // A single tap can provide a quick summary or toggle status
+              },
             ),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Tapped on ${payment.name} for editing! (TODO: Implement Edit)',
-                  ),
-                ),
-              );
-            },
           ),
         ),
       ),
