@@ -6,8 +6,14 @@ import 'package:fl_chart/fl_chart.dart';
 import '../services/voice_input_service.dart';
 import '../utils/voice_command_parser.dart';
 
-// ⭐️ TEMP FIX: Define the missing class locally to clear red lines/errors ⭐️
-// In a real project, this class must be in '../utils/voice_command_parser.dart'
+// ⭐️ THEME COLORS ⭐️
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStart = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEnd = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
+
+// ⭐️ TEMP FIX: Define missing class locally (remove when actual file available) ⭐️
 class TransactionData {
   final double? amount;
   final String? category;
@@ -15,7 +21,6 @@ class TransactionData {
 
   TransactionData({this.amount, this.category, this.description});
 
-  // Dummy method to satisfy the usage in _showVoiceInputDialog
   static TransactionData? parseTransaction(String text) {
     return TransactionData(amount: 100.0, category: 'Dummy', description: text);
   }
@@ -138,17 +143,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
     List<QueryDocumentSnapshot> transactions,
   ) {
     Map<String, List<QueryDocumentSnapshot>> grouped = {};
-    // Format: 'Sunday, 12 October 2025'
     final DateFormat formatter = DateFormat('EEEE, d MMMM yyyy');
 
     for (var doc in transactions) {
       final date = (doc['date'] as Timestamp).toDate();
       final dateKey = formatter.format(date);
-
-      if (!grouped.containsKey(dateKey)) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey]!.add(doc);
+      grouped.putIfAbsent(dateKey, () => []).add(doc);
     }
     return grouped;
   }
@@ -205,9 +205,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD9641E),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
             child: const Text('Save'),
           ),
         ],
@@ -223,7 +221,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
           'description': data.description ?? 'Voice transaction',
           'date': DateTime.now(),
         });
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Transaction saved successfully!')),
         );
@@ -235,7 +232,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
     }
   }
 
-  // 🔹 Show dummy dialog for manual transaction
+  // 🔹 Manual input placeholder
   void _showManualInputDialog() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -244,8 +241,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
         ),
       ),
     );
-    // In a real app, you would navigate to a form here
-    // or show a specific dialog for manual entry.
   }
 
   Widget _buildRow(String label, String value) => Padding(
@@ -259,14 +254,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
   String formatCurrency(double amount) =>
       NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
 
-  // ⭐️ Widget to build a single transaction tile
+  // ⭐️ Single transaction tile
   Widget _buildTransactionTile(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final date = (data['date'] as Timestamp).toDate();
     return Card(
+      color: _cardColor,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
-        leading: const Icon(Icons.receipt, color: Color(0xFFD9641E)),
+        leading: const Icon(Icons.receipt, color: _secondaryColor),
         title: Text(data['description'] ?? 'N/A'),
         subtitle: Text(
           '${data['category']} - ${DateFormat('hh:mm a').format(date)}',
@@ -282,35 +278,32 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  // ⭐️ Widget to build the Date Header
-  Widget _buildDateHeader(String dateKey) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        dateKey,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFD9641E),
-        ),
+  Widget _buildDateHeader(String dateKey) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Text(
+      dateKey,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: _cardColor,
       ),
-    );
-  }
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (user == null)
       return const Scaffold(body: Center(child: Text('User not logged in.')));
-    }
 
     final dateRange = _getDateRange(_selectedFilter);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Transaction History'),
-        backgroundColor: const Color(0xFFD9641E),
+        backgroundColor: _primaryColor,
+        foregroundColor: Colors.white,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
@@ -321,144 +314,178 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('spending')
-            .where('userId', isEqualTo: user.uid)
-            .where(
-              'date',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(dateRange.start),
-            )
-            .where(
-              'date',
-              isLessThanOrEqualTo: Timestamp.fromDate(dateRange.end),
-            )
-            .orderBy('date', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError)
-            return Center(child: Text('Error: ${snapshot.error}'));
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No transactions found.'));
-          }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_gradientStart, _gradientEnd],
+          ),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('spending')
+              .where('userId', isEqualTo: user.uid)
+              .where(
+                'date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(dateRange.start),
+              )
+              .where(
+                'date',
+                isLessThanOrEqualTo: Timestamp.fromDate(dateRange.end),
+              )
+              .orderBy('date', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(_secondaryColor),
+                ),
+              );
+            }
+            if (snapshot.hasError)
+              return Center(child: Text('Error: ${snapshot.error}'));
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text(
+                  'No transactions found.',
+                  style: TextStyle(color: _cardColor),
+                ),
+              );
+            }
 
-          final transactions = snapshot.data!.docs;
-
-          final aggData = _aggregateTransactions(transactions, _selectedFilter);
-          final spots = aggData.values
-              .toList()
-              .asMap()
-              .entries
-              .map((e) => FlSpot(e.key.toDouble(), e.value))
-              .toList();
-
-          // ⭐️ Group transactions by date
-          final groupedTransactions = _groupTransactionsByDate(transactions);
-
-          // Create a list of widgets from the grouped data (Headers + Tiles)
-          final List<Widget> datedTransactionList = [];
-          // Iterate over the sorted keys (dates) for proper order
-          final sortedDateKeys = groupedTransactions.keys.toList();
-          for (var dateKey in sortedDateKeys) {
-            final dateTransactions = groupedTransactions[dateKey]!;
-            // Add the date header (e.g., 'Sunday, 12 October 2025')
-            datedTransactionList.add(_buildDateHeader(dateKey));
-            // Add all transactions for that date
-            datedTransactionList.addAll(
-              dateTransactions.map(_buildTransactionTile),
+            final transactions = snapshot.data!.docs;
+            final aggData = _aggregateTransactions(
+              transactions,
+              _selectedFilter,
             );
-          }
+            final spots = aggData.values
+                .toList()
+                .asMap()
+                .entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList();
 
-          return ListView(
-            children: [
-              if (aggData.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    height: 200,
-                    child: LineChart(
-                      LineChartData(
-                        gridData: FlGridData(show: true),
-                        titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                final idx = value.toInt();
-                                if (idx >= 0 && idx < aggData.keys.length) {
-                                  return Text(
-                                    aggData.keys.elementAt(idx),
-                                    style: const TextStyle(fontSize: 10),
-                                  );
-                                }
-                                return const SizedBox();
-                              },
-                            ),
-                          ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (v, _) => Text(
-                                '₹${(v / 1000).toStringAsFixed(0)}k',
-                                style: const TextStyle(fontSize: 10),
+            final groupedTransactions = _groupTransactionsByDate(transactions);
+
+            final List<Widget> datedTransactionList = [];
+            final sortedDateKeys = groupedTransactions.keys.toList();
+            for (var dateKey in sortedDateKeys) {
+              datedTransactionList.add(_buildDateHeader(dateKey));
+              datedTransactionList.addAll(
+                groupedTransactions[dateKey]!.map(_buildTransactionTile),
+              );
+            }
+
+            return ListView(
+              children: [
+                if (aggData.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      height: 200,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: true),
+                          titlesData: FlTitlesData(
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final idx = value.toInt();
+                                  if (idx >= 0 && idx < aggData.keys.length) {
+                                    return Text(
+                                      aggData.keys.elementAt(idx),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: _cardColor,
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox();
+                                },
                               ),
                             ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (v, _) => Text(
+                                  '₹${(v / 1000).toStringAsFixed(0)}k',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: _cardColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                           ),
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(
+                              color: _cardColor.withOpacity(0.5),
+                            ),
+                          ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: spots,
+                              isCurved: true,
+                              color: _secondaryColor,
+                              barWidth: 3,
+                              dotData: FlDotData(
+                                show: true,
+                                getDotPainter: (spot, percent, barData, index) {
+                                  return FlDotCirclePainter(
+                                    radius: 3,
+                                    color: _cardColor,
+                                    strokeWidth: 1,
+                                    strokeColor: _secondaryColor,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        borderData: FlBorderData(show: true),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: spots,
-                            isCurved: true,
-                            color: const Color(0xFFD9641E),
-                            barWidth: 3,
-                            dotData: FlDotData(show: true),
-                          ),
-                        ],
                       ),
                     ),
                   ),
-                ),
-              // ⭐️ Display date-grouped transactions
-              ...datedTransactionList,
-            ],
-          );
-        },
+                ...datedTransactionList,
+              ],
+            );
+          },
+        ),
       ),
-      // MODIFIED: Only two FABs here (Mic and Orange Add)
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // 1. Mic FAB (NO CHANGES: Remains Orange)
           FloatingActionButton(
             heroTag: 'voiceFab',
             onPressed: _showVoiceInputDialog,
-            backgroundColor: const Color(0xFFD9641E),
-            child: const Icon(Icons.mic),
+            backgroundColor: _secondaryColor,
+            child: const Icon(Icons.mic, color: _cardColor),
           ),
-          const SizedBox(height: 16), // Spacer
-          // 2. Generic Add FAB (NOW ORANGE)
+          const SizedBox(height: 16),
           FloatingActionButton(
             heroTag: 'addFab',
             onPressed: _showManualInputDialog,
-            // ➡️ Changed from const Color(0xFF9C27B0) (Purple)
-            // ➡️ to const Color(0xFFD9641E) (Orange)
-            backgroundColor: const Color(0xFFD9641E),
-            child: const Icon(Icons.add),
+            backgroundColor: _primaryColor,
+            child: const Icon(Icons.add, color: _cardColor),
           ),
         ],
       ),
-      // Position the column of FABs at the end-bottom
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
 
-// 🔹 Voice Input Dialog (reused)
+// 🔹 Voice Input Dialog
 class VoiceInputDialog extends StatefulWidget {
   final VoiceInputService voiceService;
   final Function(String) onResult;
@@ -478,6 +505,8 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
   bool _isListening = false;
   String _statusText = 'Tap mic to start';
   late AnimationController _controller;
+
+  static const Color _primaryColor = Color(0xFF008080);
 
   @override
   void initState() {
@@ -532,8 +561,7 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                // Mic button remains orange
-                color: _isListening ? Colors.red : const Color(0xFFD9641E),
+                color: _isListening ? Colors.red : _primaryColor,
                 boxShadow: _isListening
                     ? [
                         BoxShadow(

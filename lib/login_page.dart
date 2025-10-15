@@ -4,6 +4,13 @@ import 'package:finsage/dashboard_page.dart';
 import 'package:finsage/signup_page.dart';
 import 'package:finsage/forgotpass.dart';
 
+// Updated color constants to match dashboard_page.dart
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStartColor = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEndColor = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -61,123 +68,204 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
+                // App logo or title
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Image.asset(
+                    'assets/bodhi/casual.png', // <-- Replace with your image path
+                    height: 120,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
                   'Welcome Back!',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD9641E), // Orange color as before
+                    color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                Text(
+                const Text(
                   'Sign in to continue to your dashboard',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    prefixIcon: const Icon(Icons.email),
+
+                // Login form in white card
+                Card(
+                  color: _cardColor,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.email,
+                                color: _primaryColor,
+                              ),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: !_isPasswordVisible,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: _primaryColor,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: _primaryColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordVisible = !_isPasswordVisible;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ForgotPassPage(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(color: _primaryColor),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _signIn,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _secondaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
+                        ],
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ForgotPassPage(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Color(0xFFD9641E)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD9641E),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Sign In',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                ),
+
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Don\'t have an account?'),
+                    const Text(
+                      'Don\'t have an account?',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -191,7 +279,8 @@ class _LoginPageState extends State<LoginPage> {
                         'Sign Up',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFD9641E),
+                          color: Colors.white,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
                     ),

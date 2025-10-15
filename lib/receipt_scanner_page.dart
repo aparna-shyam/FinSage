@@ -6,10 +6,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-// 🍊 Define the Orange color for the buttons and main theme
-const Color _orangeColor = Color(0xFFD9641E);
-// 💡 Define the Light Background color for the page body
-const Color _lightBackgroundColor = Color(0xFFECE2D2);
+// Updated color constants to match dashboard_page.dart
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStartColor = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEndColor = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
 
 class ReceiptScannerPage extends StatefulWidget {
   const ReceiptScannerPage({super.key});
@@ -275,219 +277,253 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Keep page body background as light beige
-      backgroundColor: _lightBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Scan Receipt',
-          style: TextStyle(
-            color: Colors.white,
-          ), // App Bar title text color set to white
+          style: TextStyle(color: Colors.white),
         ),
-        // AppBar background reverted to orange
-        backgroundColor: _orangeColor,
+        backgroundColor: _primaryColor, // Deep Teal
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_image != null)
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_image!, fit: BoxFit.cover),
-                ),
-              )
-            else
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Icon(Icons.receipt_long, size: 80, color: Colors.grey),
-                ),
-              ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt, color: Colors.white),
-                    label: const Text(
-                      'Camera',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      // Buttons remain orange
-                      backgroundColor: _orangeColor,
-                      padding: const EdgeInsets.all(16),
-                      foregroundColor: Colors.white,
+      body: Container(
+        // Apply gradient background like dashboard_page.dart
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_image != null)
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white54),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(_image!, fit: BoxFit.cover),
+                  ),
+                )
+              else
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.receipt_long,
+                      size: 80,
+                      color: Colors.white70,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library, color: Colors.white),
-                    label: const Text(
-                      'Gallery',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      // Buttons remain orange
-                      backgroundColor: _orangeColor,
-                      padding: const EdgeInsets.all(16),
-                      foregroundColor: Colors.white,
+
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      label: const Text(
+                        'Camera',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _secondaryColor, // Rose Gold
+                        padding: const EdgeInsets.all(16),
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            if (_isProcessing)
-              const Center(
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 12),
-                    Text('Processing receipt...'),
-                  ],
-                ),
-              ),
-
-            if (_image != null && !_isProcessing) ...[
-              const Text(
-                'Transaction Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  prefixText: '₹',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  }
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              ListTile(
-                title: const Text('Date'),
-                subtitle: Text(
-                  DateFormat(
-                    'MMM d, y',
-                  ).format(_detectedDate ?? DateTime.now()),
-                ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () async {
-                  // ➡️ Applying Theme to the DatePicker for color change
-                  final picked = await showThemeDatePicker(
-                    context: context,
-                    initialDate: _detectedDate ?? DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _detectedDate = picked;
-                    });
-                  }
-                },
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(
+                        Icons.photo_library,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Gallery',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _secondaryColor, // Rose Gold
+                        padding: const EdgeInsets.all(16),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
 
-              ElevatedButton(
-                onPressed: _saveTransaction,
-                style: ElevatedButton.styleFrom(
-                  // Button remains orange
-                  backgroundColor: _orangeColor,
-                  padding: const EdgeInsets.all(16),
-                  foregroundColor: Colors.white,
+              if (_isProcessing)
+                const Center(
+                  child: Column(
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 12),
+                      Text(
+                        'Processing receipt...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Text(
-                  'Save Transaction',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
 
-              if (_extractedText.isNotEmpty) ...[
-                const SizedBox(height: 24),
+              if (_image != null && !_isProcessing) ...[
                 const Text(
-                  'Extracted Text',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _extractedText,
-                    style: const TextStyle(fontSize: 12),
+                  'Transaction Details',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // White cards for form fields
+                Card(
+                  color: _cardColor,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _amountController,
+                          decoration: const InputDecoration(
+                            labelText: 'Amount',
+                            prefixText: '₹',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          decoration: const InputDecoration(
+                            labelText: 'Category',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: _categories.map((category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedCategory = value;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        ListTile(
+                          title: const Text('Date'),
+                          subtitle: Text(
+                            DateFormat(
+                              'MMM d, y',
+                            ).format(_detectedDate ?? DateTime.now()),
+                          ),
+                          trailing: const Icon(Icons.calendar_today),
+                          onTap: () async {
+                            final picked = await showThemeDatePicker(
+                              context: context,
+                              initialDate: _detectedDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _detectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                ElevatedButton(
+                  onPressed: _saveTransaction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _secondaryColor, // Rose Gold
+                    padding: const EdgeInsets.all(16),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    'Save Transaction',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+
+                if (_extractedText.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Extracted Text',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _extractedText,
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  ),
+                ],
               ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  // ⭐️ New helper function to wrap showDatePicker with the theme ⭐️
+  // Updated helper function with new theme colors
   Future<DateTime?> showThemeDatePicker({
     required BuildContext context,
     required DateTime initialDate,
@@ -503,18 +539,13 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: ColorScheme.light(
-              // Header background color
-              primary: _orangeColor,
-              // Color of the selected date circle
+              primary: _primaryColor, // Deep Teal header
               onPrimary: Colors.white,
-              // Dialog background color
               surface: Colors.white,
-              // Selected date text color (e.g., in the header)
               onSurface: Colors.black,
             ),
-            // Text button color (e.g., 'CANCEL', 'OK')
             textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: _orangeColor),
+              style: TextButton.styleFrom(foregroundColor: _primaryColor),
             ),
           ),
           child: child!,

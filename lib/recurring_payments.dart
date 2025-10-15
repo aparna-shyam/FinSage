@@ -5,6 +5,19 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// ⭐️ NEW IMPORT: Import the NotificationsPage ⭐️
+import 'notifications_page.dart';
+
+// Define new colors based on the theme constants
+const Color _deepTeal = Color(0xFF008080); // Primary: Deep Teal
+const Color _roseGold = Color(0xFFB76E79); // Secondary: Rose Gold
+const Color _gradientStart = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEnd = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardBoxColor = Color(0xFFFFFFFF); // Pure White
+const Color _backgroundColor = Color(
+  0xFFF5F7FA,
+); // Soft Light Grey background for fixed pages
+
 // -----------------------------------------------------------------------------
 // 1. DATA MODEL (Now maps to Firestore structure)
 // -----------------------------------------------------------------------------
@@ -90,10 +103,6 @@ class RecurringPaymentsPage extends StatefulWidget {
 }
 
 class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
-  // Orange color defined in dashboard_page.dart
-  static const Color _orangeColor = Color(0xFFD9641E);
-  static const Color _lightBackgroundColor = Color(0xFFECE2D2);
-
   // Expanded list of frequency options
   final List<String> _frequencies = [
     'Daily',
@@ -299,13 +308,13 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                   return Theme(
                     data: Theme.of(context).copyWith(
                       colorScheme: const ColorScheme.light(
-                        primary: _orangeColor,
+                        primary: _deepTeal, // Use primary color (Deep Teal)
                         onPrimary: Colors.white,
                         onSurface: Colors.black,
                       ),
                       textButtonTheme: TextButtonThemeData(
                         style: TextButton.styleFrom(
-                          foregroundColor: _orangeColor,
+                          foregroundColor: _deepTeal, // Use primary color
                         ),
                       ),
                     ),
@@ -456,7 +465,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       ),
                       trailing: const Icon(
                         Icons.calendar_today,
-                        color: _orangeColor,
+                        color: _deepTeal, // Use primary color
                       ),
                       onTap: () => _selectDate(true),
                     ),
@@ -476,7 +485,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       trailing: endDate == null
                           ? const Icon(
                               Icons.add_circle_outline,
-                              color: _orangeColor,
+                              color: _deepTeal, // Use primary color
                             )
                           : IconButton(
                               icon: const Icon(Icons.clear, color: Colors.grey),
@@ -504,7 +513,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                           isActive = value;
                         });
                       },
-                      activeColor: _orangeColor,
+                      activeColor: _deepTeal, // Use primary color
                     ),
                   ],
                 ),
@@ -561,11 +570,11 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _orangeColor,
+                    backgroundColor: _deepTeal, // Use primary color
                   ),
-                  child: Text(
-                    paymentToEdit == null ? 'Save' : 'Update',
-                    style: const TextStyle(color: Colors.white),
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -592,7 +601,10 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
         : 'Due every ${payment.dueDetail}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        vertical: 4,
+        horizontal: 8,
+      ), // Added horizontal padding for spacing from gradient
       // WRAP THE TILE IN DISMISSIBLE
       child: Dismissible(
         key: Key(payment.id),
@@ -640,13 +652,16 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
         child: GestureDetector(
           onDoubleTap: () => _showEditRecurringPaymentDialog(payment),
           child: Card(
+            color: _cardBoxColor, // Ensure card color is explicitly white
             margin: EdgeInsets
                 .zero, // Card needs margin of zero here since parent Padding handles it
             elevation: 2,
             child: ListTile(
               leading: Icon(
                 Icons.calendar_month,
-                color: payment.isActive ? _orangeColor : Colors.grey,
+                color: payment.isActive
+                    ? _deepTeal
+                    : Colors.grey, // Use primary color
               ),
               title: Text(
                 payment.name,
@@ -667,7 +682,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                   Text(
                     _formatCurrency(payment.amount),
                     style: TextStyle(
-                      color: _orangeColor,
+                      color: _deepTeal, // Use primary color
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -683,9 +698,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                 ],
               ),
               // Removed onTap to prevent conflict, now using onDoubleTap
-              onTap: () {
-                // A single tap can provide a quick summary or toggle status
-              },
+              onTap: null,
             ),
           ),
         ),
@@ -704,18 +717,22 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     }
 
     return Scaffold(
-      backgroundColor: _lightBackgroundColor,
+      backgroundColor:
+          Colors.transparent, // Set Scaffold background to transparent
       appBar: AppBar(
-        title: const Text('Recurring Payments'),
-        backgroundColor: _orangeColor,
-        // 🔔 ADDED NOTIFICATION BELL ICON 🔔
+        title: const Text('Current Payments'),
+        backgroundColor: _deepTeal, // Use primary color
+        foregroundColor: Colors.white,
+        // 🔔 The bell icon is already correctly placed in the actions list 🔔
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications tapped on Recurring Payments'),
+              // Navigate to NotificationsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
                 ),
               );
             },
@@ -723,60 +740,75 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
         ],
       ),
       // 🎯 Use StreamBuilder to load data from Firestore
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _paymentsCollection
-            .where('userId', isEqualTo: currentUser!.uid)
-            .orderBy('firstDueDate', descending: false)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error loading payments: ${snapshot.error}'),
+      body: Container(
+        // ⭐️ GRADIENT IMPLEMENTATION START ⭐️
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_gradientStart, _gradientEnd],
+          ),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _paymentsCollection
+              .where('userId', isEqualTo: currentUser!.uid)
+              .orderBy('firstDueDate', descending: false)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: _roseGold),
+              );
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Error loading payments: ${snapshot.error}'),
+              );
+            }
+
+            final payments = snapshot.data!.docs
+                .map((doc) => RecurringPayment.fromFirestore(doc))
+                .toList();
+
+            if (payments.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.autorenew,
+                      size: 80,
+                      color: _roseGold, // Used secondary color for contrast
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No subscriptions or bills found.', // Title redundancy removed
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                    const Text(
+                      'Tap the + button to add a new recurring payment.',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Display the list of payments
+            return ListView.builder(
+              padding: const EdgeInsets.only(top: 8, bottom: 80),
+              itemCount: payments.length,
+              itemBuilder: (context, index) {
+                return _buildPaymentTile(payments[index]);
+              },
             );
-          }
-
-          final payments = snapshot.data!.docs
-              .map((doc) => RecurringPayment.fromFirestore(doc))
-              .toList();
-
-          if (payments.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.autorenew, size: 80, color: _orangeColor),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No recurring payments set up yet.',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  const Text(
-                    'Tap the + button to add a new subscription or bill.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Display the list of payments
-          return ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 80),
-            itemCount: payments.length,
-            itemBuilder: (context, index) {
-              return _buildPaymentTile(payments[index]);
-            },
-          );
-        },
-      ),
-
+          },
+        ),
+      ), // ⭐️ GRADIENT IMPLEMENTATION END ⭐️
       // Floating action button for adding recurring payments
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddRecurringPaymentDialog,
-        backgroundColor: _orangeColor,
+        backgroundColor: _roseGold, // Use secondary color (Rose Gold)
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

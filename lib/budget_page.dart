@@ -7,6 +7,15 @@ import 'package:intl/intl.dart';
 import '../services/voice_input_service.dart';
 import '../utils/voice_command_parser.dart';
 
+// Define new colors
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStart = Color(0xFF2C3E50); // Dark Blue-Purple (New)
+const Color _gradientEnd = Color(0xFF4CA1AF); // Lighter Blue-Teal (New)
+const Color _backgroundColor =
+    Colors.transparent; // Set Scaffold background to transparent
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
+
 class BudgetPage extends StatefulWidget {
   const BudgetPage({super.key});
 
@@ -82,7 +91,7 @@ class _BudgetPageState extends State<BudgetPage> {
   Future<void> _addBudget() async {
     final currentUser = user;
     if (currentUser == null) return;
-    
+
     final category = _selectedCategory ?? _categoryController.text.trim();
     final amount = double.tryParse(_budgetController.text.trim()) ?? 0.0;
 
@@ -175,7 +184,7 @@ class _BudgetPageState extends State<BudgetPage> {
                 ElevatedButton(
                   onPressed: _addBudget,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6B5B95),
+                    backgroundColor: _primaryColor,
                   ),
                   child: const Text('Add'),
                 ),
@@ -190,7 +199,7 @@ class _BudgetPageState extends State<BudgetPage> {
   // Voice input budget method
   void _showVoiceInputDialog() {
     final voiceService = VoiceInputService();
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -206,7 +215,9 @@ class _BudgetPageState extends State<BudgetPage> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Could not understand. Try: "Budget 5000 for food"'),
+                  content: Text(
+                    'Could not understand. Try: "Budget 5000 for food"',
+                  ),
                   duration: Duration(seconds: 3),
                 ),
               );
@@ -248,9 +259,7 @@ class _BudgetPageState extends State<BudgetPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B5B95),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
             child: const Text('Save Budget'),
           ),
         ],
@@ -260,7 +269,7 @@ class _BudgetPageState extends State<BudgetPage> {
     if (confirmed == true) {
       try {
         final category = data.category ?? 'other';
-        
+
         // Check if budget already exists
         final existingBudget = await FirebaseFirestore.instance
             .collection('budgets')
@@ -296,9 +305,9 @@ class _BudgetPageState extends State<BudgetPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saving budget: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error saving budget: $e')));
         }
       }
     }
@@ -357,225 +366,240 @@ class _BudgetPageState extends State<BudgetPage> {
     }
 
     return Scaffold(
+      backgroundColor:
+          _backgroundColor, // Set scaffold background to transparent
       appBar: AppBar(
-        title: const Text('My Budget'),
-        backgroundColor: const Color(0xFF6B5B95),
+        title: const Text('My Current Budgets'),
+        backgroundColor: _primaryColor, // Deep Teal
+        foregroundColor: Colors.white, // Ensures title text is visible
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _categoryBudgets.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined,
-                      size: 80,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No budgets set yet.',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade600,
+      body: Container(
+        // ⭐️ GRADIENT IMPLEMENTATION START ⭐️
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_gradientStart, _gradientEnd],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _categoryBudgets.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        size: 80,
+                        color: _secondaryColor, // Changed color for contrast
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tap + to add a budget or 🎤 for voice input',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No budgets set yet.',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white, // Changed color for contrast
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              )
-            : ListView(
-                children: _categoryBudgets.keys.map((category) {
-                  final budget = _categoryBudgets[category] ?? 0.0;
-                  final spent = _categorySpent[category] ?? 0.0;
-                  final progress = spent / budget;
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Tap + to add a budget or 🎤 for voice input',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70, // Changed color for contrast
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView(
+                  children: _categoryBudgets.keys.map((category) {
+                    final budget = _categoryBudgets[category] ?? 0.0;
+                    final spent = _categorySpent[category] ?? 0.0;
+                    final progress = budget > 0 ? spent / budget : 0.0;
 
-                  Color progressColor;
-                  String statusText;
-                  if (progress < 0.7) {
-                    progressColor = Colors.green;
-                    statusText = 'On Track';
-                  } else if (progress < 1) {
-                    progressColor = Colors.orange;
-                    statusText = 'Warning';
-                  } else {
-                    progressColor = Colors.red;
-                    statusText = 'Over Budget';
-                  }
+                    Color progressColor;
+                    String statusText;
+                    if (progress < 0.7) {
+                      progressColor = Colors.green;
+                      statusText = 'On Track';
+                    } else if (progress < 1) {
+                      progressColor = Colors.orange;
+                      statusText = 'Warning';
+                    } else {
+                      progressColor = Colors.red;
+                      statusText = 'Over Budget';
+                    }
 
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF6B5B95).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      color: _cardColor, // Pure White Card
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: _primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    _getCategoryIcon(category),
+                                    color: _primaryColor, // Deep Teal Icon
+                                    size: 24,
+                                  ),
                                 ),
-                                child: Icon(
-                                  _getCategoryIcon(category),
-                                  color: const Color(0xFF6B5B95),
-                                  size: 24,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        category.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        statusText,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: progressColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: progressColor.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${(progress * 100).toStringAsFixed(0)}%',
+                                    style: TextStyle(
+                                      color: progressColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: progress > 1 ? 1 : progress,
+                                color: progressColor,
+                                backgroundColor: Colors.grey[300],
+                                minHeight: 8,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      category.toUpperCase(),
+                                      'Spent',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatCurrency(spent),
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
                                     Text(
-                                      statusText,
+                                      'Budget',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: progressColor,
-                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatCurrency(budget),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: _primaryColor, // Deep Teal
                                       ),
                                     ),
                                   ],
                                 ),
+                              ],
+                            ),
+                            if (progress < 1) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Remaining: ${_formatCurrency(budget - spent)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: progressColor.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${(progress * 100).toStringAsFixed(0)}%',
-                                  style: TextStyle(
-                                    color: progressColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                            ] else ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Exceeded by: ${_formatCurrency(spent - budget)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 16),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: LinearProgressIndicator(
-                              value: progress > 1 ? 1 : progress,
-                              color: progressColor,
-                              backgroundColor: Colors.grey[300],
-                              minHeight: 8,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Spent',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    _formatCurrency(spent),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Budget',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    _formatCurrency(budget),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF6B5B95),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (progress < 1) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'Remaining: ${_formatCurrency(budget - spent)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ] else ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'Exceeded by: ${_formatCurrency(spent - budget)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.red,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-      ),
+                    );
+                  }).toList(),
+                ),
+        ),
+      ), // ⭐️ GRADIENT IMPLEMENTATION END ⭐️
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
             heroTag: 'voice_budget',
             onPressed: _showVoiceInputDialog,
-            backgroundColor: const Color(0xFF8B7BA8),
+            backgroundColor: _secondaryColor, // Rose Gold for voice
             child: const Icon(Icons.mic, color: Colors.white),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: 'add_budget',
             onPressed: _showAddBudgetDialog,
-            backgroundColor: const Color(0xFF6B5B95),
+            backgroundColor: _secondaryColor, // Rose Gold for + icon
             child: const Icon(Icons.add, color: Colors.white),
           ),
         ],
@@ -584,7 +608,7 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 }
 
-// Voice Input Dialog Widget
+// Voice Input Dialog Widget (Updated colors)
 class VoiceInputDialog extends StatefulWidget {
   final VoiceInputService voiceService;
   final Function(String) onResult;
@@ -608,6 +632,9 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
   bool _isListening = false;
   String _statusText = 'Tap microphone to start';
   late AnimationController _animationController;
+
+  // Re-define colors locally for the dialog's usage
+  static const Color _primaryColor = Color(0xFF008080); // Deep Teal
 
   @override
   void initState() {
@@ -635,14 +662,16 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
     final result = await widget.voiceService.startListening();
 
     _animationController.stop();
-    
+
     if (mounted) {
       Navigator.pop(context);
       if (result != null && result.isNotEmpty) {
         widget.onResult(result);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No speech detected. Please try again.')),
+          const SnackBar(
+            content: Text('No speech detected. Please try again.'),
+          ),
         );
       }
     }
@@ -663,21 +692,27 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isListening ? Colors.red : const Color(0xFF6B5B95),
+                color: _isListening
+                    ? Colors.red
+                    : _primaryColor, // Use primary color
                 boxShadow: _isListening
                     ? [
                         BoxShadow(
                           color: Colors.red.withOpacity(0.5),
                           blurRadius: 20,
                           spreadRadius: 5,
-                        )
+                        ),
                       ]
                     : [],
               ),
               child: _isListening
                   ? RotationTransition(
                       turns: _animationController,
-                      child: const Icon(Icons.mic, color: Colors.white, size: 50),
+                      child: const Icon(
+                        Icons.mic,
+                        color: Colors.white,
+                        size: 50,
+                      ),
                     )
                   : const Icon(Icons.mic, color: Colors.white, size: 50),
             ),

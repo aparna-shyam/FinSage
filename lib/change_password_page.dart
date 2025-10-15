@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main_app_page.dart';
 
+// 💠 Define the Primary/Accent color: Deep Teal ⭐️
+const Color _primaryColor = Color(0xFF008080);
+
+// 🔵 Gradient Start Color: Dark Blue-Purple
+const Color _gradientStartColor = Color(0xFF2C3E50);
+// 🔷 Gradient End Color: Lighter Blue-Teal
+const Color _gradientEndColor = Color(0xFF4CA1AF);
+
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
 
@@ -28,12 +36,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           await user.updatePassword(_passwordController.text);
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Password updated successfully!'),
               backgroundColor: Colors.green,
             ),
           );
+          // ignore: use_build_context_synchronously
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainAppPage()),
@@ -46,6 +56,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         } else {
           message = 'An error occurred: ${e.message}';
         }
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
@@ -56,57 +67,93 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // The AppBar uses the primary color (Deep Teal)
       appBar: AppBar(
-        title: const Text('Change Password'),
-        backgroundColor: const Color(0xFFD9641E), // Orange app bar
+        title: const Text(
+          'Change Password',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: _primaryColor,
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ), // Set back button color
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'You have successfully signed in via email. Please set a new password:',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'New Password',
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _confirmPasswordController,
-                label: 'Confirm New Password',
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD9641E), // Orange button
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 32,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+      // Apply the gradient background to the body by wrapping the content
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Center(
+              // Center the content vertically and horizontally
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Add lock icon above the text
+                    const Icon(
+                      Icons.lock_open_rounded,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'You have successfully signed in via email. Please set a new password:',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70, // Light text for dark background
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'New Password',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm New Password',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 40),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor, // Deep Teal button
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 40,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      onPressed: _changePassword,
+                      child: const Text(
+                        'Update Password',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                onPressed: _changePassword,
-                child: const Text(
-                  'Update Password',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
-      backgroundColor: const Color(0xFFECE2D2), // Light background
     );
   }
 
@@ -118,6 +165,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      style: const TextStyle(
+        color: Colors.black87,
+      ), // Ensure input text is visible
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter $label';
@@ -130,16 +180,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       },
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(
+          color: Colors.black54,
+        ), // Label in white field
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.white, // White fill for text field
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 15,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
+        errorStyle: const TextStyle(
+          color: Colors.yellowAccent,
+        ), // Error on dark background
       ),
     );
   }

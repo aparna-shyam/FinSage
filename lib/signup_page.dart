@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Updated color constants to match dashboard_page.dart
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStartColor = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEndColor = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
+
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -114,99 +121,138 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD9641E), // Orange app bar
-        title: const Text('Sign Up'),
+        backgroundColor: _primaryColor, // Deep Teal
+        title: const Text('Sign Up', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Create Account',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black, // Changed from orange to black
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                const SizedBox(height: 16),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Name',
-                keyboardType: TextInputType.name,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _phoneController,
-                label: 'Phone Number',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _ageController,
-                label: 'Age',
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _confirmPasswordController,
-                label: 'Confirm Password',
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-              // Checkbox option
-              CheckboxListTile(
-                title: const Text(
-                  'Would you like to receive suggestions on managing your finances properly?',
-                  style: TextStyle(fontSize: 14),
-                ),
-                value: _receiveSuggestions,
-                activeColor: const Color(0xFFD9641E), // Orange checkbox
-                onChanged: (bool? value) {
-                  setState(() {
-                    _receiveSuggestions = value ?? false;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD9641E), // Orange button
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                // Form fields wrapped in a white card for better readability
+                Card(
+                  color: _cardColor,
+                  elevation: 4,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        _buildTextField(
+                          controller: _nameController,
+                          label: 'Name',
+                          keyboardType: TextInputType.name,
+                          icon: Icons.person,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email',
+                          keyboardType: TextInputType.emailAddress,
+                          icon: Icons.email,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _phoneController,
+                          label: 'Phone Number',
+                          keyboardType: TextInputType.phone,
+                          icon: Icons.phone,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _ageController,
+                          label: 'Age',
+                          keyboardType: TextInputType.number,
+                          icon: Icons.cake,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          obscureText: true,
+                          icon: Icons.lock,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _confirmPasswordController,
+                          label: 'Confirm Password',
+                          obscureText: true,
+                          icon: Icons.lock_outline,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Checkbox option
+                        CheckboxListTile(
+                          title: const Text(
+                            'Would you like to receive suggestions on managing your finances properly?',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          value: _receiveSuggestions,
+                          activeColor: _primaryColor, // Deep Teal checkbox
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _receiveSuggestions = value ?? false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _signUp();
-                  }
-                },
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _secondaryColor, // Rose Gold button
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _signUp();
+                    }
+                  },
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -218,6 +264,7 @@ class _SignUpPageState extends State<SignUpPage> {
     required String label,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
+    IconData? icon,
   }) {
     return TextFormField(
       controller: controller,
@@ -243,15 +290,28 @@ class _SignUpPageState extends State<SignUpPage> {
       },
       decoration: InputDecoration(
         labelText: label,
+        prefixIcon: icon != null ? Icon(icon, color: _primaryColor) : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey.shade50,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 15,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: _primaryColor, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red),
         ),
       ),
     );

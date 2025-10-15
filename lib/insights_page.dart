@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finsage/services/news_service.dart';
-import 'package:finsage/services/insights_service.dart'; // ✅ uses InsightsService
+import 'package:finsage/services/insights_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// Updated color constants to match dashboard_page.dart
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStartColor = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEndColor = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -29,12 +36,15 @@ class _InsightsPageState extends State<InsightsPage> {
 
     if (user != null) {
       try {
-        final userDoc =
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
         if (mounted) {
           setState(() {
-            _receiveSuggestions = userDoc.data()?['receiveSuggestions'] ?? false;
+            _receiveSuggestions =
+                userDoc.data()?['receiveSuggestions'] ?? false;
             _isLoading = false;
           });
         }
@@ -69,30 +79,52 @@ class _InsightsPageState extends State<InsightsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
-    final cardColor = isDarkMode ? Colors.grey[850] : Colors.white;
-
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
     }
 
     if (!_receiveSuggestions) {
       return Scaffold(
-        backgroundColor: const Color(0xFFECE2D2),
         appBar: AppBar(
-          title: const Text('Financial Insights'),
-          backgroundColor: const Color(0xFFD9641E),
+          title: const Text(
+            'Financial Insights',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: _primaryColor,
           elevation: 0,
           automaticallyImplyLeading: false,
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Financial suggestions are turned off. You can enable them in your profile settings.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, color: textColor),
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_gradientStartColor, _gradientEndColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Financial suggestions are turned off. You can enable them in your profile settings.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ),
         ),
@@ -100,23 +132,36 @@ class _InsightsPageState extends State<InsightsPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2),
       appBar: AppBar(
-        title: const Text('Financial Insights'),
-        backgroundColor: const Color(0xFFD9641E),
+        title: const Text(
+          'Financial Insights',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: _primaryColor,
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildNewsAndTipsCard(textColor, cardColor),
-              const SizedBox(height: 20),
-              _buildSpendingInsightsCard(textColor, cardColor),
-            ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildNewsAndTipsCard(),
+                const SizedBox(height: 20),
+                _buildSpendingInsightsCard(),
+              ],
+            ),
           ),
         ),
       ),
@@ -124,95 +169,108 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   /// 📰 News & Tips (from NewsService)
-  Widget _buildNewsAndTipsCard(Color textColor, Color? cardColor) {
-    final Color whiteCard = Colors.white;
-
+  Widget _buildNewsAndTipsCard() {
     return FutureBuilder<List<Map<String, String>>>(
       future: NewsService().fetchFinancialNewsAndTips(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         }
         if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No news or tips available.');
-        }
-
-        final content = snapshot.data!;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: whiteCard,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Card(
-            color: Colors.transparent,
-            elevation: 0,
+          return Card(
+            color: _cardColor,
+            elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.lightbulb, color: textColor, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Financial Insights',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Card(
+            color: _cardColor,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No news or tips available.',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          );
+        }
+
+        final content = snapshot.data!;
+
+        return Card(
+          color: _cardColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.lightbulb, color: _primaryColor, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Financial Insights',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                    ],
-                  ),
-                  Divider(color: textColor, height: 20),
-                  ...content.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: InkWell(
-                        onTap: item['url'] != null && item['url']!.isNotEmpty
-                            ? () => _launchUrl(item['url']!)
-                            : null,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.star, size: 16, color: textColor),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                item['text']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  decoration: (item['url'] != null &&
-                                          item['url']!.isNotEmpty)
-                                      ? TextDecoration.underline
-                                      : TextDecoration.none,
-                                  color: textColor,
-                                ),
+                    ),
+                  ],
+                ),
+                Divider(color: Colors.grey.shade300, height: 20),
+                ...content.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: InkWell(
+                      onTap: item['url'] != null && item['url']!.isNotEmpty
+                          ? () => _launchUrl(item['url']!)
+                          : null,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.star, size: 16, color: _secondaryColor),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              item['text']!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                decoration:
+                                    (item['url'] != null &&
+                                        item['url']!.isNotEmpty)
+                                    ? TextDecoration.underline
+                                    : TextDecoration.none,
+                                color: Colors.black87,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -221,20 +279,19 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 
   /// 💰 Spending Insights (from InsightsService)
-  Widget _buildSpendingInsightsCard(Color textColor, Color? cardColor) {
-    final Color whiteCard = Colors.white;
-
+  Widget _buildSpendingInsightsCard() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: whiteCard,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: const Text(
-          "Please sign in to see your spending insights.",
-          style: TextStyle(fontSize: 16, color: Colors.red),
+      return Card(
+        color: _cardColor,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            "Please sign in to see your spending insights.",
+            style: TextStyle(fontSize: 16, color: Colors.red),
+          ),
         ),
       );
     }
@@ -243,120 +300,173 @@ class _InsightsPageState extends State<InsightsPage> {
       future: _insightsService.analyzeSpending(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         }
         if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          return Card(
+            color: _cardColor,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          );
         }
         if (!snapshot.hasData) {
-          return const Text('No spending data available.');
+          return Card(
+            color: _cardColor,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No spending data available.',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          );
         }
 
         final data = snapshot.data!;
         final double totalThis = (data['totalThisMonth'] ?? 0.0).toDouble();
         final double totalLast = (data['totalLastMonth'] ?? 0.0).toDouble();
         final double percentChange = (data['percentChange'] ?? 0.0).toDouble();
-        final Map<String, double> categoryTotals =
-            Map<String, double>.from(data['categoryTotals'] ?? {});
-        final List<String> suggestions =
-            List<String>.from(data['suggestions'] ?? []);
+        final Map<String, double> categoryTotals = Map<String, double>.from(
+          data['categoryTotals'] ?? {},
+        );
+        final List<String> suggestions = List<String>.from(
+          data['suggestions'] ?? [],
+        );
 
-        return Container(
-          decoration: BoxDecoration(
-            color: whiteCard,
+        return Card(
+          color: _cardColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
           ),
-          child: Card(
-            color: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.trending_up, color: textColor, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Spending Insights',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.trending_up, color: _primaryColor, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Spending Insights',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                Divider(color: Colors.grey.shade300, height: 20),
+                Text(
+                  "Total This Month: ₹${totalThis.toStringAsFixed(2)}",
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Last Month: ₹${totalLast.toStringAsFixed(2)}",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black.withOpacity(0.7),
                   ),
-                  Divider(color: textColor, height: 20),
-                  Text("Total This Month: ₹${totalThis.toStringAsFixed(2)}",
-                      style: TextStyle(fontSize: 16, color: textColor)),
-                  const SizedBox(height: 4),
-                  Text("Last Month: ₹${totalLast.toStringAsFixed(2)}",
-                      style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8))),
-                  const SizedBox(height: 6),
-                  Text(
-                    totalLast > 0
-                        ? "Change: ${percentChange.toStringAsFixed(1)}%"
-                        : (totalThis > 0
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  totalLast > 0
+                      ? "Change: ${percentChange.toStringAsFixed(1)}%"
+                      : (totalThis > 0
                             ? "New activity this month"
                             : "No activity"),
-                    style: TextStyle(fontSize: 14, color: textColor),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: percentChange > 0 ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 12),
+                ),
+                const SizedBox(height: 12),
 
-                  if (categoryTotals.isNotEmpty) ...[
-                    Text("Category breakdown:",
-                        style: TextStyle(fontSize: 16, color: textColor)),
-                    const SizedBox(height: 8),
-                    ...categoryTotals.entries.map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(e.key,
-                                    style: TextStyle(color: textColor)),
-                              ),
-                              Text("₹${e.value.toStringAsFixed(2)}",
-                                  style: TextStyle(color: textColor)),
-                            ],
-                          ),
-                        )),
-                    const SizedBox(height: 12),
-                  ],
-
-                  Text("Suggestions:",
-                      style: TextStyle(fontSize: 16, color: textColor)),
-                  const SizedBox(height: 6),
-                  ...suggestions.map(
-                    (s) => Padding(
+                if (categoryTotals.isNotEmpty) ...[
+                  const Text(
+                    "Category breakdown:",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...categoryTotals.entries.map(
+                    (e) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.circle, size: 8, color: textColor),
-                          const SizedBox(width: 8),
                           Expanded(
-                            child: Text(s,
-                                style: TextStyle(fontSize: 14, color: textColor)),
+                            child: Text(
+                              e.key,
+                              style: const TextStyle(color: Colors.black87),
+                            ),
+                          ),
+                          Text(
+                            "₹${e.value.toStringAsFixed(2)}",
+                            style: TextStyle(
+                              color: _primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
                 ],
-              ),
+
+                const Text(
+                  "Suggestions:",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ...suggestions.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.circle, size: 8, color: _secondaryColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            s,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );

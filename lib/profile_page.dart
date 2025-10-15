@@ -3,9 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
-import 'spending_report_page.dart'; // Import the spending report page
-import 'notifications_page.dart'; // Import the notifications page
-import 'financial_setup_page.dart'; // Import the new Financial Setup page
+import 'spending_report_page.dart';
+import 'notifications_page.dart';
+import 'financial_setup_page.dart';
+
+// Updated color constants to match dashboard_page.dart
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
+const Color _gradientStartColor = Color(0xFF2C3E50); // Dark Blue-Purple
+const Color _gradientEndColor = Color(0xFF4CA1AF); // Lighter Blue-Teal
+const Color _cardColor = Color(0xFFFFFFFF); // Pure White
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -173,6 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   SwitchListTile(
                     title: const Text('Receive Financial Suggestions'),
                     value: _userData?['receiveSuggestions'] ?? false,
+                    activeColor: _primaryColor,
                     onChanged: (bool value) {
                       setStateInDialog(
                         () => _userData?['receiveSuggestions'] = value,
@@ -183,11 +191,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   SwitchListTile(
                     title: const Text('Theme Mode (Dark/Light)'),
                     value: themeProvider.themeMode == ThemeMode.dark,
+                    activeColor: _primaryColor,
                     onChanged: (bool value) => themeProvider.toggleTheme(),
                   ),
                   ListTile(
                     title: const Text('Change Password'),
-                    trailing: const Icon(Icons.arrow_forward_ios),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: _primaryColor,
+                    ),
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.pushNamed(context, '/change-password');
@@ -198,7 +210,7 @@ class _ProfilePageState extends State<ProfilePage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
+                  child: Text('Close', style: TextStyle(color: _primaryColor)),
                 ),
               ],
             );
@@ -227,168 +239,233 @@ class _ProfilePageState extends State<ProfilePage> {
       context,
       MaterialPageRoute(builder: (context) => const FinancialSetupPage()),
     ).then((_) {
-      _fetchUserProfileData(); // Refresh after setup
+      _fetchUserProfileData();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2), // Set background color
       appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: const Color(
-          0xFFD9641E,
-        ), // Changed app bar to orange shade
+        title: const Text('My Profile', style: TextStyle(color: Colors.white)),
+        backgroundColor: _primaryColor,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: _showSettingsDialog,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onTap: _showAvatarSelectionDialog,
-                    child: Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage:
-                                _userData?['profilePictureUrl'] != null &&
-                                    _userData!['profilePictureUrl'].startsWith(
-                                      'assets/',
-                                    )
-                                ? AssetImage(_userData!['profilePictureUrl'])
-                                      as ImageProvider
-                                : (_userData?['profilePictureUrl'] != null
-                                      ? NetworkImage(
-                                          _userData!['profilePictureUrl'],
-                                        )
-                                      : null),
-                            child: _userData?['profilePictureUrl'] == null
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 70,
-                                    color: Colors.grey,
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Profile Picture Section
+                    GestureDetector(
+                      onTap: _showAvatarSelectionDialog,
+                      child: Center(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors
-                                    .black, // Changed pen icon background to black
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: Colors.white,
-                                  width: 2,
+                                  width: 3,
                                 ),
                               ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(4.0),
-                                child: Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 20,
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage:
+                                    _userData?['profilePictureUrl'] != null &&
+                                        _userData!['profilePictureUrl']
+                                            .startsWith('assets/')
+                                    ? AssetImage(
+                                            _userData!['profilePictureUrl'],
+                                          )
+                                          as ImageProvider
+                                    : (_userData?['profilePictureUrl'] != null
+                                          ? NetworkImage(
+                                              _userData!['profilePictureUrl'],
+                                            )
+                                          : null),
+                                child: _userData?['profilePictureUrl'] == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 70,
+                                        color: Colors.grey,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _secondaryColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4.0),
+                                  child: Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    'Name: ${_userData?['name'] ?? 'N/A'}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Email: ${_user?.email ?? 'N/A'}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Suggestions: ${_userData?['receiveSuggestions'] == true ? 'On' : 'Off'}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 30),
 
-                  // Button for financial setup
-                  ElevatedButton.icon(
-                    onPressed: _openFinancialSetup,
-                    icon: const Icon(
-                      Icons.account_balance_wallet,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      'Set Income & Savings Goal',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD9641E), // Orange button
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    // User Info Card
+                    Card(
+                      color: _cardColor,
+                      elevation: 4,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoRow(
+                              Icons.person,
+                              'Name',
+                              _userData?['name'] ?? 'N/A',
+                            ),
+                            const Divider(height: 20),
+                            _buildInfoRow(
+                              Icons.email,
+                              'Email',
+                              _user?.email ?? 'N/A',
+                            ),
+                            const Divider(height: 20),
+                            _buildInfoRow(
+                              Icons.notifications_active,
+                              'Suggestions',
+                              _userData?['receiveSuggestions'] == true
+                                  ? 'On'
+                                  : 'Off',
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  ElevatedButton.icon(
-                    onPressed: _viewSpendingReport,
-                    icon: const Icon(Icons.bar_chart, color: Colors.white),
-                    label: const Text(
-                      'View Spending Report',
-                      style: TextStyle(color: Colors.white),
+                    // Action Buttons
+                    _buildActionButton(
+                      icon: Icons.account_balance_wallet,
+                      label: 'Set Income & Savings Goal',
+                      color: _primaryColor,
+                      onPressed: _openFinancialSetup,
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD9641E), // Orange button
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                    const SizedBox(height: 12),
+                    _buildActionButton(
+                      icon: Icons.bar_chart,
+                      label: 'View Spending Report',
+                      color: _primaryColor,
+                      onPressed: _viewSpendingReport,
                     ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  ElevatedButton.icon(
-                    onPressed: _signOut,
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    label: const Text(
-                      'Sign Out',
-                      style: TextStyle(color: Colors.white),
+                    const SizedBox(height: 12),
+                    _buildActionButton(
+                      icon: Icons.logout,
+                      label: 'Sign Out',
+                      color: Colors.red[700]!,
+                      onPressed: _signOut,
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(
-                        0xFF8B0000,
-                      ), // Dark shade of red
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: _primaryColor, size: 24),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.white),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+      ),
     );
   }
 }
