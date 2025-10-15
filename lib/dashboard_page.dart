@@ -70,35 +70,94 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _selectedIndex = index;
     });
+    // Close the drawer after selection
+    Navigator.pop(context);
+  }
+
+  // ⭐️ Updated Widget for the Navigation Drawer ⭐️
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: _lightBackgroundColor,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          // Header using the Orange theme color
+          const DrawerHeader(
+            decoration: BoxDecoration(color: _orangeColor),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'FinSage Menu',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Navigate your finances',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          // List of navigation items
+          ...List.generate(_pages.length, (index) {
+            return ListTile(
+              leading: Icon(
+                _pageIcons[index],
+                color: _selectedIndex == index ? _orangeColor : Colors.black87,
+              ),
+              title: Text(
+                _pageTitles[index],
+                style: TextStyle(
+                  color: _selectedIndex == index
+                      ? _orangeColor
+                      : Colors.black87,
+                  fontWeight: _selectedIndex == index
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              onTap: () => _onItemTapped(index),
+            );
+          }),
+
+          // Divider and Sign Out option (Example of extra menu item)
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.grey),
+            title: const Text('Sign Out'),
+            onTap: () {
+              // Add sign out logic here
+              FirebaseAuth.instance.signOut();
+              Navigator.pop(context);
+              // You might want to navigate to a login page here
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // The index of Recurring Payments is 2.
+    // We explicitly exclude it from showing the app-wide FAB.
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.swap_horiz),
-            label: 'Transactions',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Goals'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.insights),
-            label: 'Insights',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF6B5B95),
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-      ),
-      // Only show FAB for Home (0) and Transactions (1) pages
-      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
+
+      // ⭐️ Add the Navigation Drawer ⭐️
+      drawer: _buildDrawer(),
+
+      // Removed BottomNavigationBar completely
+
+      // Only show FAB for Home (0) and Transactions (1).
+      floatingActionButton:
+          (_selectedIndex == 0 || _selectedIndex == 1) // Logic to show/hide FAB
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
@@ -331,19 +390,12 @@ class _DashboardHomeState extends State<_DashboardHome> {
           'Hello, $_userName!',
           style: const TextStyle(color: Colors.white),
         ),
-        title: Text('Hello, $_userName!'),
-        backgroundColor: const Color(0xFF6B5B95),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications tapped')),
-              );
-            },
-          ),
-        ],
+        // ➡️ AppBar background orange
+        backgroundColor: _orangeColor,
+        automaticallyImplyLeading:
+            true, // Set to true to automatically show hamburger icon
+        // ❌ REMOVED: The actions list that contained the notification bell icon.
+        actions: const [],
       ),
       body: SingleChildScrollView(
         child: Padding(
