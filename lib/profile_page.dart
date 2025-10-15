@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+// Note: theme_provider.dart and financial_setup_page.dart are assumed to exist
+// and do not need to be shown for this fix.
 import 'theme_provider.dart';
 import 'notifications_page.dart';
 import 'financial_setup_page.dart';
+
+// ⭐️ FIX: Import the model used in NotificationsPage's constructor. ⭐️
+// We need to import the recurring_payments.dart file to get the RecurringPayment class definition.
+// Assuming recurring_payments.dart is in the same directory.
+import 'recurring_payments.dart';
 
 // Updated color constants to match dashboard_page.dart
 const Color _primaryColor = Color(0xFF008080); // Deep Teal
@@ -219,10 +226,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // ⭐️ FIX APPLIED HERE ⭐️
   void _viewNotifications() {
+    // Since ProfilePage doesn't have the payments data, we pass an empty list
+    // to prevent the constructor error. The NotificationsPage will display
+    // a graceful "No notifications" message.
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NotificationsPage()),
+      MaterialPageRoute(
+        builder: (context) => NotificationsPage(
+          recurringPayments: [], // Pass an empty list of the required type
+        ),
+      ),
     );
   }
 

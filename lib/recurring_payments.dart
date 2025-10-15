@@ -31,6 +31,8 @@ class RecurringPayment {
   final String dueDetail;
   final bool isActive;
   final String? notes;
+  // ⭐️ NEW FIELD: For Notification Settings ⭐️
+  final int notifyDaysBefore;
 
   RecurringPayment({
     required this.id,
@@ -42,6 +44,8 @@ class RecurringPayment {
     required this.dueDetail,
     this.isActive = true,
     this.notes,
+    // ⭐️ NEW INITIALIZER ⭐️
+    this.notifyDaysBefore = 3, // Default to 3 days
   });
 
   // Factory constructor to create a RecurringPayment from a Firestore Document
@@ -57,6 +61,8 @@ class RecurringPayment {
       dueDetail: data['dueDetail'] ?? '',
       isActive: data['isActive'] ?? true,
       notes: data['notes'],
+      // ⭐️ NEW FIELD PARSING ⭐️
+      notifyDaysBefore: data['notifyDaysBefore'] ?? 3,
     );
   }
 
@@ -72,6 +78,8 @@ class RecurringPayment {
       'dueDetail': dueDetail,
       'isActive': isActive,
       'notes': notes,
+      // ⭐️ NEW FIELD IN MAP ⭐️
+      'notifyDaysBefore': notifyDaysBefore,
       'createdAt':
           FieldValue.serverTimestamp(), // NOTE: Only for initial save, not for update
     };
@@ -88,6 +96,8 @@ class RecurringPayment {
       'dueDetail': dueDetail,
       'isActive': isActive,
       'notes': notes,
+      // ⭐️ NEW FIELD IN UPDATE MAP ⭐️
+      'notifyDaysBefore': notifyDaysBefore,
     };
   }
 }
@@ -191,6 +201,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     int selectedDayOfMonth = dueDate.day.clamp(1, 28);
     String selectedDayOfWeek = DateFormat('EEEE').format(dueDate);
     bool isActive = true;
+    int notifyDaysBefore = 3; // ⭐️ NEW: Default for Add ⭐️
 
     // Controllers for text fields
     final nameController = TextEditingController();
@@ -208,6 +219,8 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
       nameController: nameController,
       amountController: amountController,
       notesController: notesController,
+      // ⭐️ NEW ARGUMENT ⭐️
+      notifyDaysBefore: notifyDaysBefore,
       dialogTitle: 'Add Recurring Payment',
       saveFunction: _savePayment,
     );
@@ -222,6 +235,8 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     DateTime dueDate = payment.firstDueDate;
     DateTime? endDate = payment.endDate;
     bool isActive = payment.isActive;
+    int notifyDaysBefore =
+        payment.notifyDaysBefore; // ⭐️ NEW: Value from existing payment ⭐️
 
     // Controllers for text fields
     final nameController = TextEditingController(text: payment.name);
@@ -255,6 +270,8 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
       nameController: nameController,
       amountController: amountController,
       notesController: notesController,
+      // ⭐️ NEW ARGUMENT ⭐️
+      notifyDaysBefore: notifyDaysBefore,
       dialogTitle: 'Edit Recurring Payment',
       saveFunction: _updatePayment,
     );
@@ -274,6 +291,8 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
     required TextEditingController nameController,
     required TextEditingController amountController,
     required TextEditingController notesController,
+    // ⭐️ NEW REQUIRED ARGUMENT ⭐️
+    required int notifyDaysBefore,
     required String dialogTitle,
     required Future<void> Function(RecurringPayment) saveFunction,
   }) {
@@ -495,6 +514,38 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       onTap: () => _selectDate(false),
                     ),
                     const Divider(),
+                    // ⭐️ NEW WIDGET: Notification Days Selector ⭐️
+                    DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(
+                        labelText: 'Notify me before (days)',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        border: OutlineInputBorder(),
+                      ),
+                      value: notifyDaysBefore,
+                      items: [0, 1, 2, 3, 5, 7, 10].map((int days) {
+                        String text;
+                        if (days == 0) {
+                          text = 'On the due date';
+                        } else if (days == 1) {
+                          text = '1 day before';
+                        } else {
+                          text = '$days days before';
+                        }
+                        return DropdownMenuItem<int>(
+                          value: days,
+                          child: Text(text),
+                        );
+                      }).toList(),
+                      onChanged: (int? newValue) {
+                        if (newValue != null) {
+                          setStateInDialog(() {
+                            notifyDaysBefore = newValue;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 15),
+
                     TextField(
                       controller: notesController,
                       decoration: const InputDecoration(
@@ -554,6 +605,8 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       notes: notesController.text.isEmpty
                           ? null
                           : notesController.text,
+                      // ⭐️ NEW FIELD ASSIGNMENT ⭐️
+                      notifyDaysBefore: notifyDaysBefore,
                     );
 
                     Navigator.of(context).pop();
@@ -672,7 +725,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                 children: [
                   Text('${payment.frequency} - $dueInfo'),
                   Text(
-                    'Next: ${DateFormat('dd MMM yyyy').format(payment.firstDueDate)}',
+                    'Next: ${DateFormat('dd MMM yyyy').format(payment.firstDueDate)} (Notify ${payment.notifyDaysBefore} days before)', // ⭐️ Notify Info ⭐️
                   ),
                 ],
               ),
@@ -723,23 +776,39 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
         title: const Text('Current Payments'),
         backgroundColor: _deepTeal, // Use primary color
         foregroundColor: Colors.white,
-        // 🔔 The bell icon is already correctly placed in the actions list 🔔
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {
-              // Navigate to NotificationsPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
+          // ⭐️ StreamBuilder placed here to fetch data to pass to NotificationsPage ⭐️
+          StreamBuilder<QuerySnapshot>(
+            stream: _paymentsCollection
+                .where('userId', isEqualTo: currentUser!.uid)
+                .orderBy('firstDueDate', descending: false)
+                .snapshots(),
+            builder: (context, snapshot) {
+              final List<RecurringPayment> payments = snapshot.hasData
+                  ? snapshot.data!.docs
+                        .map((doc) => RecurringPayment.fromFirestore(doc))
+                        .toList()
+                  : [];
+
+              return IconButton(
+                icon: const Icon(Icons.notifications_none, color: Colors.white),
+                onPressed: () {
+                  // FIX: Pass the required 'recurringPayments' list
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationsPage(
+                        recurringPayments: payments, // ⭐️ FIX: Pass the list ⭐️
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),
         ],
       ),
-      // 🎯 Use StreamBuilder to load data from Firestore
+      // 🎯 Use StreamBuilder to load data for the main list
       body: Container(
         // ⭐️ GRADIENT IMPLEMENTATION START ⭐️
         decoration: const BoxDecoration(
