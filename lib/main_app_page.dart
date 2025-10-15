@@ -138,7 +138,7 @@ class _MainAppPageState extends State<MainAppPage> {
                       ),
                     ),
                   );
-                }).toList()
+                })
               else
                 Center(
                   child: Text(

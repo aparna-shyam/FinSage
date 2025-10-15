@@ -5,6 +5,9 @@ import 'receipt_scanner_page.dart'; // Add this import
 class CategorySelectionPage extends StatelessWidget {
   const CategorySelectionPage({super.key});
 
+  // Define the orange color constant for the theme
+  static const Color orangeColor = Color(0xFFD9641E);
+
   @override
   Widget build(BuildContext context) {
     // Define the list of categories and their icons
@@ -72,68 +75,90 @@ class CategorySelectionPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2),
+      backgroundColor: const Color(0xFFECE2D2), // Light Beige Background
       appBar: AppBar(
-        title: const Text('Choose a Spending Category'),
-        backgroundColor: const Color(0xFFD9641E),
+        title: const Text(
+          'Choose a Spending Category',
+          style: TextStyle(color: Colors.white), // White text for orange AppBar
+        ),
+        backgroundColor: orangeColor,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true, // Allow user to navigate back
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Choose a Spending Category',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Scan Receipt Button
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ReceiptScannerPage(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.document_scanner, size: 28),
-                label: const Text(
-                  'Scan Receipt',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6B5B95),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Scan Receipt Button Section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              16.0,
+              16.0,
+              16.0,
+              0.0,
+            ), // Top margin only
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReceiptScannerPage(),
                   ),
-                  elevation: 4,
+                );
+              },
+              icon: const Icon(Icons.document_scanner, size: 28),
+              label: const Text(
+                'Scan Receipt',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: orangeColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 4,
+                minimumSize: const Size(
+                  double.infinity,
+                  60,
+                ), // Ensure full width
               ),
             ),
-            
-            const Divider(height: 24, thickness: 2),
-            
-            const SizedBox(height: 8),
-            
-            Expanded(
+          ),
+
+          // Divider for visual separation
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Divider(height: 1, thickness: 1, color: Colors.grey),
+          ),
+
+          // Grid View Section Title
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: 8.0,
+            ),
+            child: Text(
+              'Or Select a Category Manually:',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
+            ),
+          ),
+
+          // Category Grid View
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 16.0,
-                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 12.0, // Reduced spacing slightly
+                  mainAxisSpacing: 12.0, // Reduced spacing slightly
+                  childAspectRatio:
+                      0.9, // Adjusted ratio to fit more content better
                 ),
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
@@ -147,8 +172,8 @@ class CategorySelectionPage extends StatelessWidget {
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -172,19 +197,26 @@ class CategorySelectionPage extends StatelessWidget {
         color: Colors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 50, color: color),
-            const SizedBox(height: 10),
-            Text(
-              name,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.black),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Padding(
+          // Added padding for card content
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40, color: color), // Slightly smaller icon
+              const SizedBox(height: 8),
+              Text(
+                name,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

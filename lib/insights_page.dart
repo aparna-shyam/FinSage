@@ -325,7 +325,7 @@ class _InsightsPageState extends State<InsightsPage> {
                           child: Row(
                             children: [
                               Expanded(
-                                child: Text("${e.key}",
+                                child: Text(e.key,
                                     style: TextStyle(color: textColor)),
                               ),
                               Text("₹${e.value.toStringAsFixed(2)}",

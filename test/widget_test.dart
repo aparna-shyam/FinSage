@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/main.dart'; // Adjust the path if your main.dart is elsewhere
+import 'package:finsage/main.dart'; // Adjust the path if your main.dart is elsewhere
 
 void main() {
   testWidgets('App renders correctly on startup', (WidgetTester tester) async {
