@@ -432,153 +432,335 @@ class _BudgetPageState extends State<BudgetPage> {
                       statusText = 'Over Budget';
                     }
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    return Dismissible(
+                      key: Key(category),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        color: Colors.red,
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
-                      color: _cardColor, // Pure White Card
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: _primaryColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    _getCategoryIcon(category),
-                                    color: _primaryColor, // Deep Teal Icon
-                                    size: 24,
-                                  ),
+                      confirmDismiss: (direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Budget'),
+                            content: Text(
+                              'Are you sure you want to delete the budget for "$category"?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        final currentUser = user;
+                        if (currentUser == null) return;
+                        // Delete from Firestore
+                        final existingBudget = await FirebaseFirestore.instance
+                            .collection('budgets')
+                            .where('userId', isEqualTo: currentUser.uid)
+                            .where('category', isEqualTo: category)
+                            .get();
+                        for (var doc in existingBudget.docs) {
+                          await FirebaseFirestore.instance
+                              .collection('budgets')
+                              .doc(doc.id)
+                              .delete();
+                        }
+                        setState(() {
+                          _categoryBudgets.remove(category);
+                          _categorySpent.remove(category);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Budget for "$category" deleted'),
+                          ),
+                        );
+                      },
+                      child: GestureDetector(
+                        onDoubleTap: () async {
+                          // Show edit dialog for this budget
+                          _budgetController.text = budget.toStringAsFixed(0);
+                          _selectedCategory = category;
+                          await showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text(
+                                  'Edit Budget for ${category.toUpperCase()}',
+                                ),
+                                content: SingleChildScrollView(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        category.toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                      DropdownButtonFormField<String>(
+                                        value: _selectedCategory ?? category,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Category',
+                                          border: OutlineInputBorder(),
+                                          prefixIcon: Icon(Icons.category),
                                         ),
+                                        items: _categories.map((cat) {
+                                          return DropdownMenuItem(
+                                            value: cat.toLowerCase(),
+                                            child: Text(cat),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedCategory = value;
+                                          });
+                                        },
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        statusText,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: progressColor,
-                                          fontWeight: FontWeight.w500,
+                                      const SizedBox(height: 16),
+                                      TextField(
+                                        controller: _budgetController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Budget Amount',
+                                          border: OutlineInputBorder(),
+                                          prefixIcon: Icon(
+                                            Icons.currency_rupee,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: progressColor.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${(progress * 100).toStringAsFixed(0)}%',
-                                    style: TextStyle(
-                                      color: progressColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final newAmount =
+                                          double.tryParse(
+                                            _budgetController.text.trim(),
+                                          ) ??
+                                          0.0;
+                                      if (newAmount > 0) {
+                                        final currentUser = user;
+                                        if (currentUser != null) {
+                                          // Update in Firestore
+                                          final existingBudget =
+                                              await FirebaseFirestore.instance
+                                                  .collection('budgets')
+                                                  .where(
+                                                    'userId',
+                                                    isEqualTo: currentUser.uid,
+                                                  )
+                                                  .where(
+                                                    'category',
+                                                    isEqualTo: category,
+                                                  )
+                                                  .get();
+                                          if (existingBudget.docs.isNotEmpty) {
+                                            await FirebaseFirestore.instance
+                                                .collection('budgets')
+                                                .doc(
+                                                  existingBudget.docs.first.id,
+                                                )
+                                                .update({'budget': newAmount});
+                                          }
+                                        }
+                                        setState(() {
+                                          _categoryBudgets[category] =
+                                              newAmount;
+                                        });
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Budget for "$category" updated',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _primaryColor,
                                     ),
+                                    child: const Text('Save'),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value: progress > 1 ? 1 : progress,
-                                color: progressColor,
-                                backgroundColor: Colors.grey[300],
-                                minHeight: 8,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: _cardColor, // Pure White Card
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                Row(
                                   children: [
-                                    Text(
-                                      'Spent',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: _primaryColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        _getCategoryIcon(category),
+                                        color: _primaryColor, // Deep Teal Icon
+                                        size: 24,
                                       ),
                                     ),
-                                    Text(
-                                      _formatCurrency(spent),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            category.toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            statusText,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: progressColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: progressColor.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${(progress * 100).toStringAsFixed(0)}%',
+                                        style: TextStyle(
+                                          color: progressColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                const SizedBox(height: 16),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: LinearProgressIndicator(
+                                    value: progress > 1 ? 1 : progress,
+                                    color: progressColor,
+                                    backgroundColor: Colors.grey[300],
+                                    minHeight: 8,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      'Budget',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Spent',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatCurrency(spent),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      _formatCurrency(budget),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: _primaryColor, // Deep Teal
-                                      ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Budget',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatCurrency(budget),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: _primaryColor, // Deep Teal
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
+                                if (progress < 1) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Remaining: ${_formatCurrency(budget - spent)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ] else ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Exceeded by: ${_formatCurrency(spent - budget)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                            if (progress < 1) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Remaining: ${_formatCurrency(budget - spent)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ] else ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Exceeded by: ${_formatCurrency(spent - budget)}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
                     );

@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: Image.asset(
                     'assets/bodhi/casual.png', // <-- Replace with your image path
-                    height: 120,
+                    height: 170,
                   ),
                 ),
                 const SizedBox(height: 8),

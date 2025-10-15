@@ -131,7 +131,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Track Smarter, Live Better.',
+                    'Financial Wisdom, Daily...',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
