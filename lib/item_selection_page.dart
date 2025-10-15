@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:finsage/services/firestore_service.dart'; // Import the service
+import 'package:finsage/services/firestore_service.dart';
+
+// Theme Colors from DashboardPage
+// 💠 Define the Primary/Accent color: Deep Teal ⭐️
+const Color _primaryColor = Color(0xFF008080);
+// 🔵 Gradient Start Color: Dark Blue-Purple
+const Color _gradientStartColor = Color(0xFF2C3E50);
+// 🔷 Gradient End Color: Lighter Blue-Teal
+const Color _gradientEndColor = Color(0xFF4CA1AF);
+// ⬜ Define the Card/Box color: Pure White ⭐️
+const Color _cardColor = Color(0xFFFFFFFF);
+// 🌹 Secondary/Accent Color (Used for highlights if needed, but sticking to primary for actions)
+const Color _secondaryColor = Color(0xFFB76E79);
 
 class ItemSelectionPage extends StatefulWidget {
   final String category;
@@ -304,6 +316,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     String description;
     double amount;
 
+    // ignore: use_build_context_synchronously
+    if (!mounted) return;
+
     switch (widget.category) {
       case 'Books':
       case 'Electronics':
@@ -386,6 +401,31 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     }
   }
 
+  // Helper method for consistent text field styling in dark background forms
+  InputDecoration _buildInputDecoration(String label, {String? prefixText}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.black54),
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: prefixText,
+      prefixStyle: const TextStyle(color: Colors.black),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
+      ),
+    );
+  }
+
   void _showItemDetailsDialog(String itemName, String itemImage) {
     _priceController.clear();
     _quantityController.clear();
@@ -407,14 +447,17 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.black54),
+              ),
             ),
             ElevatedButton(
               onPressed: _isSaving
                   ? null
                   : () => _saveTransaction(itemName, itemImage),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6B5B95),
+                backgroundColor: _primaryColor, // Deep Teal Button
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -437,6 +480,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
       case 'Cosmetics':
         return _buildGenericItemDialog(itemName, itemImage);
       case 'Bill Payments':
+        // This case should ideally not be reached as Bill Payments uses a full page form
         return _buildBillPaymentDialog();
       default:
         return _buildDefaultItemDialog(itemName, itemImage);
@@ -462,20 +506,13 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
         TextField(
           controller: _priceController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Price',
-            prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Price', prefixText: '₹'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _quantityController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Quantity',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Quantity'),
         ),
       ],
     );
@@ -499,20 +536,13 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
         const SizedBox(height: 16),
         TextField(
           controller: _itemNameController,
-          decoration: InputDecoration(
-            labelText: 'Enter Item Name/Brand',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Enter Item Name/Brand'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _priceController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Price',
-            prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Price', prefixText: '₹'),
         ),
       ],
     );
@@ -524,20 +554,13 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
       children: [
         TextField(
           controller: _itemNameController,
-          decoration: InputDecoration(
-            labelText: 'Enter Book Title',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Enter Book Title'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _priceController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Price',
-            prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          decoration: _buildInputDecoration('Price', prefixText: '₹'),
         ),
       ],
     );
@@ -551,12 +574,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
           children: [
             DropdownButtonFormField<String>(
               initialValue: _selectedBillType,
-              decoration: InputDecoration(
-                labelText: 'Select Bill Type',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              decoration: _buildInputDecoration('Select Bill Type'),
               items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent'].map((
                 String value,
               ) {
@@ -575,13 +593,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
             TextField(
               controller: _billAmountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Bill Amount',
-                prefixText: '₹',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              decoration: _buildInputDecoration('Bill Amount', prefixText: '₹'),
             ),
           ],
         );
@@ -596,81 +608,98 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     final bool isMedicinesPage = widget.category == 'Medicines';
     final bool isMembershipsPage = widget.category == 'Memberships';
 
-    // For Bill Payments, show the form directly on the page
+    // Build methods for specific full-page forms (Bills, Medicines, Memberships)
+    Widget _buildFormScaffold(Widget formWidget) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            widget.category,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: _primaryColor, // Deep Teal
+          iconTheme: const IconThemeData(color: Colors.white),
+          elevation: 0,
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_gradientStartColor, _gradientEndColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32.0),
+              child: Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: formWidget,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (isBillsPage) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFECE2D2),
-        appBar: AppBar(
-          title: Text(widget.category),
-          backgroundColor: const Color(0xFFD9641E),
-          elevation: 0,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _BillPaymentForm(firestoreService: _firestoreService),
-          ),
-        ),
+      return _buildFormScaffold(
+        _BillPaymentForm(firestoreService: _firestoreService),
       );
     }
 
-    // For Medicines, show the form directly on the page
     if (isMedicinesPage) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFECE2D2),
-        appBar: AppBar(
-          title: const Text('Medicines'),
-          backgroundColor: const Color(0xFFD9641E),
-          elevation: 0,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _MedicalExpenseForm(firestoreService: _firestoreService),
-          ),
-        ),
+      return _buildFormScaffold(
+        _MedicalExpenseForm(firestoreService: _firestoreService),
       );
     }
 
-    // For Memberships, show a dropdown and amount input
     if (isMembershipsPage) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFECE2D2),
-        appBar: AppBar(
-          title: const Text('Memberships'),
-          backgroundColor: const Color(0xFFD9641E),
-          elevation: 0,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _MembershipExpenseForm(firestoreService: _firestoreService),
-          ),
-        ),
+      return _buildFormScaffold(
+        _MembershipExpenseForm(firestoreService: _firestoreService),
       );
     }
 
-    // For all other categories, display the grid
+    // For all other categories, display the themed grid
     return Scaffold(
-      backgroundColor: const Color(0xFFECE2D2), // Set background color
+      backgroundColor: Colors.transparent, // Transparent to allow body gradient
       appBar: AppBar(
-        title: Text(widget.category),
-        backgroundColor: const Color(0xFFD9641E), // Orange app bar
+        title: Text(
+          widget.category,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: _primaryColor, // Deep Teal
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 12.0,
-          mainAxisSpacing: 12.0,
-          childAspectRatio: 0.8,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-        itemCount: itemsList.length,
-        itemBuilder: (context, index) {
-          final item = itemsList[index];
-          return _buildItemGridCard(context, item);
-        },
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12.0,
+            mainAxisSpacing: 12.0,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: itemsList.length,
+          itemBuilder: (context, index) {
+            final item = itemsList[index];
+            return _buildItemGridCard(context, item);
+          },
+        ),
       ),
     );
   }
@@ -679,7 +708,7 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     return InkWell(
       onTap: () => _showItemDetailsDialog(item['name'], item['image']),
       child: Card(
-        color: Colors.white, // White card background
+        color: _cardColor, // White card background
         elevation: 5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Padding(
@@ -715,130 +744,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
       ),
     );
   }
-
-  // Add this method to show the medical expense dialog
-  void _showMedicalExpenseDialog() {
-    final TextEditingController amountController = TextEditingController();
-    final TextEditingController hospitalController = TextEditingController();
-    bool isSavingMedical = false;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: const Text('Add Medical Expense'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: amountController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Bill Amount',
-                        prefixText: '₹',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: hospitalController,
-                      decoration: InputDecoration(
-                        labelText: 'Hospital/Clinic',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: isSavingMedical
-                      ? null
-                      : () async {
-                          final amount = double.tryParse(
-                            amountController.text,
-                          );
-                          final hospital = hospitalController.text.trim();
-                          if (amount == null ||
-                              amount <= 0 ||
-                              hospital.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter valid details.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-                          setState(() {
-                            isSavingMedical = true;
-                          });
-                          try {
-                            await _firestoreService.addTransaction(
-                              description: 'Medical Bill: $hospital',
-                              category: 'Medicines',
-                              amount: amount,
-                            );
-                            if (mounted) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Medical expense saved!'),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to save: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                isSavingMedical = false;
-                              });
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD9641E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: isSavingMedical
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Add',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 }
+
+// --- Specific Form Widgets (Themed) ---
 
 class _MembershipExpenseForm extends StatefulWidget {
   final FirestoreService firestoreService;
@@ -867,17 +775,50 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
     super.dispose();
   }
 
+  // Helper method for consistent text field styling in form cards
+  InputDecoration _buildInputDecoration(String label, {String? prefixText}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.black54),
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: prefixText,
+      prefixStyle: const TextStyle(color: Colors.black),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
-          initialValue: _selectedMembership,
-          decoration: InputDecoration(
-            labelText: 'Select Membership',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        const Text(
+          'Log a new Membership Expense',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        DropdownButtonFormField<String>(
+          value: _selectedMembership,
+          decoration: _buildInputDecoration('Select Membership'),
           items: _membershipTypes
               .map((type) => DropdownMenuItem(value: type, child: Text(type)))
               .toList(),
@@ -891,13 +832,13 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
         TextField(
           controller: _amountController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Membership Amount',
+          style: const TextStyle(color: Colors.black),
+          decoration: _buildInputDecoration(
+            'Membership Amount',
             prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _isSaving
               ? null
@@ -906,6 +847,7 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
                   if (_selectedMembership == null ||
                       amount == null ||
                       amount <= 0) {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -926,6 +868,7 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
                       amount: amount,
                     );
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Membership expense saved!'),
@@ -938,6 +881,7 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
                     }
                   } catch (e) {
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Failed to save: $e'),
@@ -954,9 +898,9 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD9641E),
+            backgroundColor: _primaryColor, // Deep Teal Button
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(30),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
           ),
@@ -964,7 +908,11 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
               ? const CircularProgressIndicator(color: Colors.white)
               : const Text(
                   'Add Membership Expense',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
       ],
@@ -998,17 +946,50 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
     super.dispose();
   }
 
+  // Helper method for consistent text field styling in form cards
+  InputDecoration _buildInputDecoration(String label, {String? prefixText}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.black54),
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: prefixText,
+      prefixStyle: const TextStyle(color: Colors.black),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
-          initialValue: _selectedBillType,
-          decoration: InputDecoration(
-            labelText: 'Select Bill Type',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        const Text(
+          'Log a new Bill Payment',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        DropdownButtonFormField<String>(
+          value: _selectedBillType,
+          decoration: _buildInputDecoration('Select Bill Type'),
           items: _billTypes
               .map((type) => DropdownMenuItem(value: type, child: Text(type)))
               .toList(),
@@ -1022,13 +1003,10 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
         TextField(
           controller: _billAmountController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Bill Amount',
-            prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          style: const TextStyle(color: Colors.black),
+          decoration: _buildInputDecoration('Bill Amount', prefixText: '₹'),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _isSaving
               ? null
@@ -1039,6 +1017,7 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
                   if (_selectedBillType == null ||
                       billAmount == null ||
                       billAmount <= 0) {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -1059,6 +1038,7 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
                       amount: billAmount,
                     );
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Bill payment saved!')),
                       );
@@ -1069,6 +1049,7 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
                     }
                   } catch (e) {
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Failed to save: $e'),
@@ -1085,9 +1066,9 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD9641E),
+            backgroundColor: _primaryColor, // Deep Teal Button
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(30),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
           ),
@@ -1095,7 +1076,11 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
               ? const CircularProgressIndicator(color: Colors.white)
               : const Text(
                   'Add Bill Payment',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
       ],
@@ -1123,29 +1108,60 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
     super.dispose();
   }
 
+  // Helper method for consistent text field styling in form cards
+  InputDecoration _buildInputDecoration(String label, {String? prefixText}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.black54),
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: prefixText,
+      prefixStyle: const TextStyle(color: Colors.black),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Text(
+          'Log a new Medical Expense',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
         TextField(
           controller: _amountController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Bill Amount',
-            prefixText: '₹',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          style: const TextStyle(color: Colors.black),
+          decoration: _buildInputDecoration('Bill Amount', prefixText: '₹'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _hospitalController,
-          decoration: InputDecoration(
-            labelText: 'Hospital/Clinic',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+          style: const TextStyle(color: Colors.black),
+          decoration: _buildInputDecoration('Hospital/Clinic'),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _isSaving
               ? null
@@ -1153,6 +1169,7 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
                   final amount = double.tryParse(_amountController.text);
                   final hospital = _hospitalController.text.trim();
                   if (amount == null || amount <= 0 || hospital.isEmpty) {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Please enter valid details.'),
@@ -1171,6 +1188,7 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
                       amount: amount,
                     );
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Medical expense saved!')),
                       );
@@ -1179,6 +1197,7 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
                     }
                   } catch (e) {
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Failed to save: $e'),
@@ -1195,9 +1214,9 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD9641E),
+            backgroundColor: _primaryColor, // Deep Teal Button
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(30),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
           ),
@@ -1205,7 +1224,11 @@ class _MedicalExpenseFormState extends State<_MedicalExpenseForm> {
               ? const CircularProgressIndicator(color: Colors.white)
               : const Text(
                   'Add Medical Expense',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
       ],
