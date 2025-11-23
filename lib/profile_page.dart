@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-// Note: theme_provider.dart and financial_setup_page.dart are assumed to exist
-// and do not need to be shown for this fix.
-import 'theme_provider.dart';
+// Note: financial_setup_page.dart is assumed to exist and does not need to be shown for this fix.
 import 'notifications_page.dart';
 import 'financial_setup_page.dart';
 
@@ -172,59 +170,52 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showSettingsDialog() {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setStateInDialog) {
-            return AlertDialog(
-              title: const Text('Settings'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: const Text('Receive Financial Suggestions'),
-                    value: _userData?['receiveSuggestions'] ?? false,
-                    activeColor: _primaryColor,
-                    onChanged: (bool value) {
-                      setStateInDialog(
-                        () => _userData?['receiveSuggestions'] = value,
-                      );
-                      _updateSuggestionsPreference(value);
-                    },
-                  ),
-                  SwitchListTile(
-                    title: const Text('Theme Mode (Dark/Light)'),
-                    value: themeProvider.themeMode == ThemeMode.dark,
-                    activeColor: _primaryColor,
-                    onChanged: (bool value) => themeProvider.toggleTheme(),
-                  ),
-                  ListTile(
-                    title: const Text('Change Password'),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: _primaryColor,
-                    ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushNamed(context, '/change-password');
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Close', style: TextStyle(color: _primaryColor)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+     showDialog(
+       context: context,
+       builder: (BuildContext context) {
+         return StatefulBuilder(
+           builder: (context, setStateInDialog) {
+             return AlertDialog(
+               title: const Text('Settings'),
+               content: Column(
+                 mainAxisSize: MainAxisSize.min,
+                 children: [
+                   SwitchListTile(
+                     title: const Text('Receive Financial Suggestions'),
+                     value: _userData?['receiveSuggestions'] ?? false,
+                     activeColor: _primaryColor,
+                     onChanged: (bool value) {
+                       setStateInDialog(
+                         () => _userData?['receiveSuggestions'] = value,
+                       );
+                       _updateSuggestionsPreference(value);
+                     },
+                   ),
+                   ListTile(
+                     title: const Text('Change Password'),
+                     trailing: Icon(
+                       Icons.arrow_forward_ios,
+                       color: _primaryColor,
+                     ),
+                     onTap: () {
+                       Navigator.of(context).pop();
+                       Navigator.pushNamed(context, '/change-password');
+                     },
+                   ),
+                 ],
+               ),
+               actions: [
+                 TextButton(
+                   onPressed: () => Navigator.of(context).pop(),
+                   child: Text('Close', style: TextStyle(color: _primaryColor)),
+                 ),
+               ],
+             );
+           },
+         );
+       },
+     );
+   }
 
   // ⭐️ FIX APPLIED HERE ⭐️
   void _viewNotifications() {

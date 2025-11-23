@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // 👈 add this
-import 'package:finsage/dashboard_page.dart'; 
+import 'package:finsage/dashboard_page.dart';
 import 'change_password_page.dart';
 import 'firebase_options.dart';
 import 'theme_provider.dart';
@@ -33,8 +33,9 @@ class FinSageApp extends StatelessWidget {
 
   /// 👇 Save user to Firestore if not already there
   Future<void> _saveUserToFirestore(User user) async {
-    final userDoc =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
 
     final docSnapshot = await userDoc.get();
 
