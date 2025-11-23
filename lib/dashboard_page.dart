@@ -167,21 +167,7 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             }),
 
-            // Divider and Sign Out option (Example of extra menu item)
-            const Divider(
-              color: Colors.white54,
-            ), // Lighter divider for dark background
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.white70),
-              title: const Text(
-                'Sign Out',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.pop(context);
-              },
-            ),
+            // (Sign Out option removed)
           ],
         ),
       ),
