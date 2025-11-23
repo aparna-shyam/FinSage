@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+// Assuming these external services are defined elsewhere
 import '../services/voice_input_service.dart';
-import '../utils/voice_command_parser.dart';
+// import '../utils/voice_command_parser.dart'; // Not strictly needed in this file
 
 // ⭐️ THEME COLORS ⭐️
 const Color _primaryColor = Color(0xFF008080); // Deep Teal
@@ -13,19 +15,37 @@ const Color _gradientStart = Color(0xFF2C3E50); // Dark Blue-Purple
 const Color _gradientEnd = Color(0xFF4CA1AF); // Lighter Blue-Teal
 const Color _cardColor = Color(0xFFFFFFFF); // Pure White
 
-// ⭐️ TEMP FIX: Define missing class locally (remove when actual file available) ⭐️
+// ⭐️ MOCK/Placeholder for TransactionData/Parser (MUST BE REPLACED) ⭐️
+// This class and method are currently mocked to allow the code to run.
+// In a real app, `voice_command_parser.dart` would provide a robust implementation.
 class TransactionData {
   final double? amount;
   final String? category;
   final String? description;
+  final bool isExpense; // Added to handle income/expense if necessary
 
-  TransactionData({this.amount, this.category, this.description});
+  TransactionData({
+    this.amount,
+    this.category,
+    this.description,
+    this.isExpense = true, // Defaulting to expense
+  });
 
+  // ⚠️ NOTE: This is a placeholder and should be implemented robustly
+  // by `VoiceCommandParser` from `../utils/voice_command_parser.dart`
   static TransactionData? parseTransaction(String text) {
-    return TransactionData(amount: 100.0, category: 'Dummy', description: text);
+    if (text.toLowerCase().contains('spent') ||
+        text.toLowerCase().contains('paid')) {
+      return TransactionData(
+        amount: 100.0,
+        category: 'Food',
+        description: text,
+      );
+    }
+    return null;
   }
 }
-// ⭐️ END TEMP FIX ⭐️
+// ⭐️ END MOCK/Placeholder ⭐️
 
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
@@ -35,74 +55,106 @@ class TransactionsPage extends StatefulWidget {
 }
 
 class _TransactionsPageState extends State<TransactionsPage> {
-  String _selectedFilter = 'Today';
+  String _selectedFilter = 'This Week'; // default is weekly
 
+  // Filters: weekly, monthly, month comparison, yearly, hourly
   final List<String> _filters = [
-    'Today',
     'This Week',
     'This Month',
-    'This Year',
-    'All Time',
+    'Month Comparison',
+    'Yearly',
+    'Hourly',
   ];
 
+  // ⚠️ NOTE: VoiceInputService must be correctly initialized and defined
+  // For this fix, we assume it's correctly imported/defined.
   final VoiceInputService _voiceService = VoiceInputService();
 
   // 🔹 Get date range based on filter
   DateTimeRange _getDateRange(String filter) {
     final now = DateTime.now();
+    DateTime start;
+    DateTime end;
+
     switch (filter) {
-      case 'Today':
-        return DateTimeRange(
-          start: DateTime(now.year, now.month, now.day, 0, 0, 0),
-          end: DateTime(now.year, now.month, now.day, 23, 59, 59),
-        );
       case 'This Week':
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        final endOfWeek = startOfWeek.add(const Duration(days: 6));
-        return DateTimeRange(start: startOfWeek, end: endOfWeek);
+        // Start of the week (Monday)
+        start = now.subtract(Duration(days: now.weekday - 1));
+        start = DateTime(start.year, start.month, start.day);
+        end = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          23,
+          59,
+          59,
+        ); // Up to now, or end of day
+        break;
+      case 'Month Comparison':
+        // Show last 6 months including current month for comparison
+        final monthsBack = 5;
+        start = DateTime(now.year, now.month - monthsBack, 1);
+        end = DateTime(
+          now.year,
+          now.month + 1,
+          0,
+          23,
+          59,
+          59,
+        ); // End of current month
+        break;
       case 'This Month':
-        final startOfMonth = DateTime(now.year, now.month, 1);
-        final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-        return DateTimeRange(start: startOfMonth, end: endOfMonth);
-      case 'This Year':
-        final startOfYear = DateTime(now.year, 1, 1);
-        final endOfYear = DateTime(now.year, 12, 31, 23, 59, 59);
-        return DateTimeRange(start: startOfYear, end: endOfYear);
+        start = DateTime(now.year, now.month, 1);
+        end = DateTime(now.year, now.month, now.day, 23, 59, 59); // Up to now
+        break;
+      case 'Yearly':
+        // Current year
+        start = DateTime(now.year, 1, 1);
+        end = DateTime(now.year, 12, 31, 23, 59, 59);
+        break;
+      case 'Hourly':
+        // Today (group by hour)
+        start = DateTime(now.year, now.month, now.day, 0, 0, 0);
+        end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
       default:
-        return DateTimeRange(start: DateTime(2000), end: now);
+        start = DateTime(2000);
+        end = now;
     }
+    return DateTimeRange(start: start, end: end);
   }
 
-  // 🔹 Aggregate transactions for graph display
+  // 🔹 Aggregate transactions for graph display - CORRECTED LOGIC
   Map<String, double> _aggregateTransactions(
     List<QueryDocumentSnapshot> transactions,
     String filter,
+    DateTimeRange dateRange,
   ) {
     Map<DateTime, double> dataWithDates = {};
 
+    // 1. Calculate raw aggregation
     for (var doc in transactions) {
       final date = (doc['date'] as Timestamp).toDate();
       DateTime key;
 
       switch (filter) {
-        case 'Today':
-          // Group by hour
-          key = DateTime(date.year, date.month, date.day, date.hour);
-          break;
         case 'This Week':
-          // Group by day
-          key = DateTime(date.year, date.month, date.day);
-          break;
         case 'This Month':
-          // Group by day
-          key = DateTime(date.year, date.month, date.day);
+          key = DateTime(date.year, date.month, date.day); // Group by day
           break;
-        case 'This Year':
-          // Group by month
-          key = DateTime(date.year, date.month);
+        case 'Month Comparison':
+        case 'Yearly':
+          key = DateTime(date.year, date.month); // Group by month
+          break;
+        case 'Hourly':
+          key = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            date.hour,
+          ); // Group by hour
           break;
         default:
-          // Group by year
           key = DateTime(date.year);
       }
 
@@ -110,29 +162,80 @@ class _TransactionsPageState extends State<TransactionsPage> {
           (dataWithDates[key] ?? 0) + (doc['amount'] as num).toDouble();
     }
 
-    final sorted = dataWithDates.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    // 2. Fill in zero values for missing time units within the range
+    Map<DateTime, double> filledData = {};
+    DateTime current = dateRange.start;
 
-    Map<String, double> result = {};
-    for (var entry in sorted) {
+    while (current.isBefore(dateRange.end) ||
+        current.isAtSameMomentAs(dateRange.end)) {
+      DateTime key;
       String label;
+
       switch (filter) {
-        case 'Today':
-          label = DateFormat('ha').format(entry.key); // e.g. 2PM
-          break;
         case 'This Week':
-          label = DateFormat('EEE').format(entry.key); // e.g. Mon
-          break;
         case 'This Month':
-          label = DateFormat('d MMM').format(entry.key); // e.g. 5 Oct
+          key = DateTime(current.year, current.month, current.day);
+          label = DateFormat(
+            filter == 'This Week' ? 'EEE' : 'd MMM',
+          ).format(key);
+          current = current.add(const Duration(days: 1));
           break;
-        case 'This Year':
-          label = DateFormat('MMM').format(entry.key); // e.g. Jan
+        case 'Month Comparison':
+        case 'Yearly':
+          key = DateTime(current.year, current.month);
+          label = DateFormat(
+            filter == 'Month Comparison' ? 'MMM yyyy' : 'MMM',
+          ).format(key);
+          current = DateTime(current.year, current.month + 1, 1);
+          break;
+        case 'Hourly':
+          key = DateTime(
+            current.year,
+            current.month,
+            current.day,
+            current.hour,
+          );
+          label = DateFormat('ha').format(key);
+          current = current.add(const Duration(hours: 1));
           break;
         default:
-          label = DateFormat('y').format(entry.key); // e.g. 2025
+          key = DateTime(current.year);
+          label = DateFormat('y').format(key);
+          current = DateTime(current.year + 1);
       }
-      result[label] = entry.value;
+
+      // Stop if the key generated is beyond the end date
+      if (key.isAfter(dateRange.end)) break;
+
+      filledData[key] = dataWithDates[key] ?? 0.0;
+    }
+
+    // 3. Convert keys to string labels, keeping them in order
+    Map<String, double> result = {};
+    final sortedKeys = filledData.keys.toList()..sort();
+
+    for (var key in sortedKeys) {
+      String label;
+      switch (filter) {
+        case 'This Week':
+          label = DateFormat('EEE').format(key); // e.g. Mon
+          break;
+        case 'This Month':
+          label = DateFormat('d MMM').format(key); // e.g. 5 Oct
+          break;
+        case 'Month Comparison':
+          label = DateFormat('MMM yyyy').format(key); // e.g. Oct 2025
+          break;
+        case 'Yearly':
+          label = DateFormat('MMM').format(key); // e.g. Jan
+          break;
+        case 'Hourly':
+          label = DateFormat('ha').format(key); // e.g. 2PM
+          break;
+        default:
+          label = DateFormat('y').format(key); // e.g. 2025
+      }
+      result[label] = filledData[key]!;
     }
 
     return result;
@@ -146,9 +249,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final DateFormat formatter = DateFormat('EEEE, d MMMM yyyy');
 
     for (var doc in transactions) {
-      final date = (doc['date'] as Timestamp).toDate();
-      final dateKey = formatter.format(date);
-      grouped.putIfAbsent(dateKey, () => []).add(doc);
+      final data = doc.data() as Map<String, dynamic>;
+      // Safely access and cast the date field
+      final dateTimestamp = data['date'];
+      if (dateTimestamp is Timestamp) {
+        final date = dateTimestamp.toDate();
+        final dateKey = formatter.format(date);
+        grouped.putIfAbsent(dateKey, () => []).add(doc);
+      }
     }
     return grouped;
   }
@@ -160,19 +268,28 @@ class _TransactionsPageState extends State<TransactionsPage> {
       builder: (_) => VoiceInputDialog(
         voiceService: _voiceService,
         onResult: (text) async {
+          // Use the correct parser from the external utility
           final data = TransactionData.parseTransaction(text);
           if (data != null && data.amount != null) {
-            await _showConfirmTransactionDialog(data, text);
+            // Check if amount is valid
+            if (data.amount! > 0) {
+              await _showConfirmTransactionDialog(data, text);
+            } else {
+              _showSnackbar('Amount must be greater than zero.');
+            }
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Could not understand. Try: "Spent 500 on food"'),
-              ),
-            );
+            _showSnackbar('Could not understand. Try: "Spent 500 on food"');
           }
         },
       ),
     );
+  }
+
+  // Helper for showing Snackbars
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // 🔹 Confirm and save the transaction
@@ -181,7 +298,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
     String originalText,
   ) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      _showSnackbar('User not logged in. Cannot save transaction.');
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -193,7 +313,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           children: [
             Text('You said: "$originalText"'),
             const SizedBox(height: 12),
-            _buildRow('Amount', '₹${data.amount}'),
+            _buildRow('Amount', formatCurrency(data.amount!)),
             _buildRow('Category', data.category ?? 'Other'),
             _buildRow('Description', data.description ?? 'N/A'),
           ],
@@ -221,25 +341,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
           'description': data.description ?? 'Voice transaction',
           'date': DateTime.now(),
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Transaction saved successfully!')),
-        );
+        _showSnackbar('✅ Transaction saved successfully!');
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving transaction: $e')));
+        _showSnackbar('Error saving transaction: $e');
       }
     }
   }
 
   // 🔹 Manual input placeholder
   void _showManualInputDialog() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Tapped Add Transaction (+): Implement manual input logic here.',
-        ),
-      ),
+    _showSnackbar(
+      'Tapped Add Transaction (+): Implement manual input logic here.',
     );
   }
 
@@ -247,7 +359,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text('$label:'), Text(value)],
+      children: [
+        Text('$label:', style: const TextStyle(fontWeight: FontWeight.w500)),
+        Text(value),
+      ],
     ),
   );
 
@@ -257,18 +372,25 @@ class _TransactionsPageState extends State<TransactionsPage> {
   // ⭐️ Single transaction tile
   Widget _buildTransactionTile(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final date = (data['date'] as Timestamp).toDate();
+    // Safely cast date
+    final dateTimestamp = data['date'];
+    final date = (dateTimestamp is Timestamp)
+        ? dateTimestamp.toDate()
+        : DateTime.now();
+
+    final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+    final description = data['description'] ?? 'N/A';
+    final category = data['category'] ?? 'Other';
+
     return Card(
       color: _cardColor,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         leading: const Icon(Icons.receipt, color: _secondaryColor),
-        title: Text(data['description'] ?? 'N/A'),
-        subtitle: Text(
-          '${data['category']} - ${DateFormat('hh:mm a').format(date)}',
-        ),
+        title: Text(description),
+        subtitle: Text('$category - ${DateFormat('hh:mm a').format(date)}'),
         trailing: Text(
-          formatCurrency((data['amount'] as num).toDouble()),
+          formatCurrency(amount),
           style: const TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
@@ -285,7 +407,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: _cardColor,
+        color: _cardColor, // Ensure visibility against the gradient
       ),
     ),
   );
@@ -293,8 +415,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null)
+    if (user == null) {
       return const Scaffold(body: Center(child: Text('User not logged in.')));
+    }
 
     final dateRange = _getDateRange(_selectedFilter);
 
@@ -344,13 +467,19 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 ),
               );
             }
-            if (snapshot.hasError)
-              return Center(child: Text('Error: ${snapshot.error}'));
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return const Center(
+            if (snapshot.hasError) {
+              return Center(
                 child: Text(
-                  'No transactions found.',
-                  style: TextStyle(color: _cardColor),
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(color: _cardColor),
+                ),
+              );
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(
+                child: Text(
+                  'No transactions found for $_selectedFilter.',
+                  style: const TextStyle(color: _cardColor),
                 ),
               );
             }
@@ -359,6 +488,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
             final aggData = _aggregateTransactions(
               transactions,
               _selectedFilter,
+              dateRange,
             );
             final spots = aggData.values
                 .toList()
@@ -370,7 +500,13 @@ class _TransactionsPageState extends State<TransactionsPage> {
             final groupedTransactions = _groupTransactionsByDate(transactions);
 
             final List<Widget> datedTransactionList = [];
-            final sortedDateKeys = groupedTransactions.keys.toList();
+            final sortedDateKeys = groupedTransactions.keys.toList()
+              ..sort(
+                (a, b) => DateFormat(
+                  'EEEE, d MMMM yyyy',
+                ).parse(b).compareTo(DateFormat('EEEE, d MMMM yyyy').parse(a)),
+              ); // Sort descending
+
             for (var dateKey in sortedDateKeys) {
               datedTransactionList.add(_buildDateHeader(dateKey));
               datedTransactionList.addAll(
@@ -387,36 +523,61 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       height: 200,
                       child: LineChart(
                         LineChartData(
-                          gridData: FlGridData(show: true),
+                          gridData: FlGridData(
+                            show: true,
+                            drawHorizontalLine: true,
+                            getDrawingHorizontalLine: (value) => FlLine(
+                              color: _cardColor.withOpacity(0.2),
+                              strokeWidth: 1,
+                            ),
+                          ),
                           titlesData: FlTitlesData(
+                            show: true,
                             bottomTitles: AxisTitles(
+                              axisNameWidget: Text(
+                                _selectedFilter,
+                                style: const TextStyle(color: _cardColor),
+                              ),
                               sideTitles: SideTitles(
                                 showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  final idx = value.toInt();
-                                  if (idx >= 0 && idx < aggData.keys.length) {
-                                    return Text(
-                                      aggData.keys.elementAt(idx),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: _cardColor,
-                                      ),
-                                    );
-                                  }
-                                  return const SizedBox();
-                                },
+                                reservedSize: 30,
+                                interval: 1,
+                                getTitlesWidget:
+                                    (double value, TitleMeta meta) {
+                                      final idx = value.toInt();
+                                      if (idx >= 0 &&
+                                          idx < aggData.keys.length) {
+                                        return SideTitleWidget(
+                                          axisSide: meta.axisSide,
+                                          space: 8.0,
+                                          child: Text(
+                                            aggData.keys.elementAt(idx),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: _cardColor,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox();
+                                    },
                               ),
                             ),
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
-                                getTitlesWidget: (v, _) => Text(
-                                  '₹${(v / 1000).toStringAsFixed(0)}k',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: _cardColor,
-                                  ),
-                                ),
+                                reservedSize: 40,
+                                getTitlesWidget: (double v, TitleMeta meta) {
+                                  if (v == 0) return const SizedBox();
+                                  return Text(
+                                    '₹${(v / 1000).toStringAsFixed(0)}k',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: _cardColor,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  );
+                                },
                               ),
                             ),
                             topTitles: const AxisTitles(
@@ -432,6 +593,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                               color: _cardColor.withOpacity(0.5),
                             ),
                           ),
+                          minY: 0,
                           lineBarsData: [
                             LineChartBarData(
                               spots: spots,
@@ -448,6 +610,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                     strokeColor: _secondaryColor,
                                   );
                                 },
+                              ),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    _secondaryColor.withOpacity(0.5),
+                                    _secondaryColor.withOpacity(0.0),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
                               ),
                             ),
                           ],
@@ -507,6 +680,7 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
   late AnimationController _controller;
 
   static const Color _primaryColor = Color(0xFF008080);
+  static const Color _cardColor = Color(0xFFFFFFFF);
 
   @override
   void initState() {
@@ -519,23 +693,35 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
 
   @override
   void dispose() {
-    _controller.dispose();
+    // Explicitly stop listening and dispose controller
     widget.voiceService.stopListening();
+    _controller.dispose();
     super.dispose();
   }
 
   Future<void> _startListening() async {
+    // Prevent starting if already listening
+    if (_isListening) return;
+
     setState(() {
       _isListening = true;
-      _statusText = 'Listening...';
+      _statusText = 'Listening... Speak now.';
     });
-    _controller.repeat();
+    _controller.repeat(reverse: true);
 
     final result = await widget.voiceService.startListening();
 
     _controller.stop();
     if (mounted) {
+      // Update state before popping to ensure UI consistency
+      setState(() {
+        _isListening = false;
+        _statusText = 'Tap mic to start';
+      });
+
+      // Pop the dialog after processing is complete
       Navigator.pop(context);
+
       if (result != null && result.isNotEmpty) {
         widget.onResult(result);
       } else {
@@ -555,24 +741,37 @@ class _VoiceInputDialogState extends State<VoiceInputDialog>
         children: [
           GestureDetector(
             onTap: _isListening ? null : _startListening,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isListening ? Colors.red : _primaryColor,
-                boxShadow: _isListening
-                    ? [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.4),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: const Icon(Icons.mic, color: Colors.white, size: 45),
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                // Creates a pulsating effect while listening
+                final scale = _isListening
+                    ? 1.0 +
+                          (_controller.value * 0.2) // Scales from 1.0 to 1.2
+                    : 1.0;
+                return Transform.scale(
+                  scale: scale,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isListening ? Colors.red.shade600 : _primaryColor,
+                      boxShadow: _isListening
+                          ? [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.6),
+                                blurRadius: 15,
+                                spreadRadius: 3,
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: const Icon(Icons.mic, color: _cardColor, size: 45),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),

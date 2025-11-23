@@ -30,6 +30,10 @@ const Color _gradientEndColor = Color(0xFF4CA1AF);
 // ⬜ Define the Card/Box color: Pure White ⭐️
 const Color _cardColor = Color(0xFFFFFFFF);
 
+// ⭐️ NEW: GlobalKey to access the state of _DashboardHome for refresh ⭐️
+final GlobalKey<_DashboardHomeState> _dashboardHomeKey =
+    GlobalKey<_DashboardHomeState>();
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -40,10 +44,10 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 0;
 
-  // 1. Add the new page to the list of pages
+  // 1. Add the new page to the list of pages - MODIFIED to use GlobalKey
   // FIX: Removed 'const' keyword where necessary to avoid constructor errors.
   final List<Widget> _pages = [
-    _DashboardHome(),
+    _DashboardHome(key: _dashboardHomeKey), // <--- MODIFIED to pass key
     const TransactionsPage(),
     const RecurringPaymentsPage(),
     const BudgetPage(),
@@ -184,31 +188,15 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Helper method to wrap DashboardHome content in the gradient
-  Widget _buildDashboardHomeWithGradient() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_gradientStartColor, _gradientEndColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      // We use the actual _DashboardHome widget here, which builds the content
-      child: _pages[0],
-    );
-  }
+  // Removed _buildDashboardHomeWithGradient as it's no longer necessary.
 
   @override
   Widget build(BuildContext context) {
-    // Determine the page to display in the body
-    Widget bodyContent;
-    if (_selectedIndex == 0) {
-      bodyContent = _buildDashboardHomeWithGradient();
-    } else {
-      // For other pages, display them normally (their Scaffolds will handle colors/backgrounds)
-      bodyContent = IndexedStack(index: _selectedIndex, children: _pages);
-    }
+    // The IndexedStack now holds ALL pages, including the home page.
+    final Widget bodyContent = IndexedStack(
+      index: _selectedIndex,
+      children: _pages,
+    );
 
     return Scaffold(
       // AppBar uses the primary color (Deep Teal)
@@ -225,21 +213,48 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: const [],
       ),
 
-      body: bodyContent,
+      // ⭐️ MODIFIED: Wrap the entire body in a Container with the gradient to cover the full page ⭐️
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_gradientStartColor, _gradientEndColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: bodyContent, // The IndexedStack sits on top of the gradient
+      ),
 
       // Drawer must be placed directly inside the Scaffold.
       drawer: _buildDrawer(),
 
-      // FAB must be placed directly inside the Scaffold.
+      // ⭐️ MODIFIED: FAB uses await to trigger data refresh on return ⭐️
       floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
           ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                // Wait for the CategorySelectionPage (and subsequent pages) to pop
+                final result = await Navigator.push(
+                  // <--- AWAITING THE PUSH
                   context,
                   MaterialPageRoute(
                     builder: (context) => const CategorySelectionPage(),
                   ),
                 );
+
+                // After returning, if the result indicates a transaction was saved (e.g., result is true)
+                // or simply resume, check if we're on the Home tab and refresh.
+                if (_selectedIndex == 0 &&
+                    _dashboardHomeKey.currentState != null) {
+                  _dashboardHomeKey.currentState!
+                      .refreshData(); // <--- NEW CALL
+                }
+
+                // You would need to add a refresh logic to TransactionsPage (index 1) too if it's not
+                // automatically refreshing when the IndexedStack shows it again.
+                if (_selectedIndex == 1) {
+                  // For TransactionsPage, you might use a similar key or a listener
+                  // if it's not refreshing automatically. For now, rely on IndexedStack rebuild.
+                }
               },
               backgroundColor: _secondaryColor, // Rose Gold for FAB
               child: const Icon(
@@ -307,6 +322,9 @@ class _DashboardHomeTitleState extends State<_DashboardHomeTitle> {
 }
 
 class _DashboardHome extends StatefulWidget {
+  // MODIFIED: Added Key to constructor
+  const _DashboardHome({Key? key}) : super(key: key);
+
   @override
   _DashboardHomeState createState() => _DashboardHomeState();
 }
@@ -324,10 +342,15 @@ class _DashboardHomeState extends State<_DashboardHome> {
   User? get user => FirebaseAuth.instance.currentUser;
   final _newsService = NewsService();
 
+  // ⭐️ NEW: Public refresh method ⭐️
+  Future<void> refreshData() async {
+    await _fetchDashboardData();
+  }
+
   @override
   void initState() {
     super.initState();
-    _fetchDashboardData();
+    refreshData(); // <--- MODIFIED to call the public method
   }
 
   Map<String, List<Map<String, dynamic>>> _groupTransactionsByDate(
@@ -356,6 +379,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
     }
 
     try {
+      if (mounted)
+        setState(() => _isLoading = true); // Set loading before fetch
+
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -386,6 +412,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
           .get();
 
       double totalSpending = 0;
+      _monthlySpending.clear(); // Clear old data
       for (var doc in spendingSnapshot.docs) {
         final data = doc.data();
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
@@ -451,7 +478,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    // ⭐️ MODIFIED: Use a white-colored CircularProgressIndicator for contrast on the dark gradient ⭐️
+    if (_isLoading)
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
 
     const Color cardColor = _cardColor; // Pure White
     const Color textColor = Colors.black; // Text color on white cards
@@ -506,6 +537,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     }
 
     // 🚨 FIX: Inner Scaffold body content must be placed inside a SingleChildScrollView
+    // The parent Scaffold now provides the gradient background.
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),

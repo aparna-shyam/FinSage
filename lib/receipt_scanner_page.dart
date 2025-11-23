@@ -265,7 +265,8 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transaction saved successfully!')),
         );
-        Navigator.pop(context);
+        // ⭐️ MODIFIED: Pop with a 'true' result to signal success to the previous screen ⭐️
+        Navigator.pop(context, true); // <--- MODIFIED
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -423,6 +424,8 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> {
                             labelText: 'Description',
                             border: OutlineInputBorder(),
                           ),
+                          keyboardType:
+                              TextInputType.text, // Corrected keyboard type
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(

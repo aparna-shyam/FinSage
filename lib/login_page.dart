@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Welcome Back!',
+                  'Welcome To FinSage!',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
