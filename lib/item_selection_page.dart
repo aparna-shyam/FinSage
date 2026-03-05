@@ -563,40 +563,40 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     );
   }
 
-  Widget _buildBillPaymentDialog() {
-    return StatefulBuilder(
-      builder: (BuildContext context, StateSetter setState) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: _selectedBillType,
-              decoration: _buildInputDecoration('Select Bill Type'),
-              items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent'].map((
-                String value,
-              ) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedBillType = newValue;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _billAmountController,
-              keyboardType: TextInputType.number,
-              decoration: _buildInputDecoration('Bill Amount', prefixText: '₹'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+Widget _buildBillPaymentDialog() {
+  return StatefulBuilder(
+    builder: (BuildContext context, StateSetter setState) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            value: _selectedBillType, // ✅ FIXED (was initialValue)
+            decoration: _buildInputDecoration('Select Bill Type'),
+            items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent']
+                .map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedBillType = newValue;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _billAmountController,
+            keyboardType: TextInputType.number,
+            decoration:
+                _buildInputDecoration('Bill Amount', prefixText: '₹'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
