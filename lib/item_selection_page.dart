@@ -563,40 +563,40 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
     );
   }
 
-Widget _buildBillPaymentDialog() {
-  return StatefulBuilder(
-    builder: (BuildContext context, StateSetter setState) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DropdownButtonFormField<String>(
-            value: _selectedBillType, // ✅ FIXED (was initialValue)
-            decoration: _buildInputDecoration('Select Bill Type'),
-            items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent']
-                .map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedBillType = newValue;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _billAmountController,
-            keyboardType: TextInputType.number,
-            decoration:
-                _buildInputDecoration('Bill Amount', prefixText: '₹'),
-          ),
-        ],
-      );
-    },
-  );
-}
+  Widget _buildBillPaymentDialog() {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _selectedBillType, // ✅ FIXED (was initialValue)
+              decoration: _buildInputDecoration('Select Bill Type'),
+              items: ['Electricity', 'Water', 'Phone', 'Internet', 'Rent'].map((
+                String value,
+              ) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedBillType = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _billAmountController,
+              keyboardType: TextInputType.number,
+              decoration: _buildInputDecoration('Bill Amount', prefixText: '₹'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -606,7 +606,7 @@ Widget _buildBillPaymentDialog() {
     final bool isMembershipsPage = widget.category == 'Memberships';
 
     // Build methods for specific full-page forms (Bills, Medicines, Memberships)
-    Widget _buildFormScaffold(Widget formWidget) {
+    Widget buildFormScaffold(Widget formWidget) {
       return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -646,19 +646,19 @@ Widget _buildBillPaymentDialog() {
     }
 
     if (isBillsPage) {
-      return _buildFormScaffold(
+      return buildFormScaffold(
         _BillPaymentForm(firestoreService: _firestoreService),
       );
     }
 
     if (isMedicinesPage) {
-      return _buildFormScaffold(
+      return buildFormScaffold(
         _MedicalExpenseForm(firestoreService: _firestoreService),
       );
     }
 
     if (isMembershipsPage) {
-      return _buildFormScaffold(
+      return buildFormScaffold(
         _MembershipExpenseForm(firestoreService: _firestoreService),
       );
     }
@@ -814,7 +814,7 @@ class _MembershipExpenseFormState extends State<_MembershipExpenseForm> {
         ),
         const SizedBox(height: 24),
         DropdownButtonFormField<String>(
-          value: _selectedMembership,
+          initialValue: _selectedMembership,
           decoration: _buildInputDecoration('Select Membership'),
           items: _membershipTypes
               .map((type) => DropdownMenuItem(value: type, child: Text(type)))
@@ -985,7 +985,7 @@ class _BillPaymentFormState extends State<_BillPaymentForm> {
         ),
         const SizedBox(height: 24),
         DropdownButtonFormField<String>(
-          value: _selectedBillType,
+          initialValue: _selectedBillType,
           decoration: _buildInputDecoration('Select Bill Type'),
           items: _billTypes
               .map((type) => DropdownMenuItem(value: type, child: Text(type)))

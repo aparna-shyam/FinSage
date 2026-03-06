@@ -170,52 +170,52 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showSettingsDialog() {
-     showDialog(
-       context: context,
-       builder: (BuildContext context) {
-         return StatefulBuilder(
-           builder: (context, setStateInDialog) {
-             return AlertDialog(
-               title: const Text('Settings'),
-               content: Column(
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   SwitchListTile(
-                     title: const Text('Receive Financial Suggestions'),
-                     value: _userData?['receiveSuggestions'] ?? false,
-                     activeColor: _primaryColor,
-                     onChanged: (bool value) {
-                       setStateInDialog(
-                         () => _userData?['receiveSuggestions'] = value,
-                       );
-                       _updateSuggestionsPreference(value);
-                     },
-                   ),
-                   ListTile(
-                     title: const Text('Change Password'),
-                     trailing: Icon(
-                       Icons.arrow_forward_ios,
-                       color: _primaryColor,
-                     ),
-                     onTap: () {
-                       Navigator.of(context).pop();
-                       Navigator.pushNamed(context, '/change-password');
-                     },
-                   ),
-                 ],
-               ),
-               actions: [
-                 TextButton(
-                   onPressed: () => Navigator.of(context).pop(),
-                   child: Text('Close', style: TextStyle(color: _primaryColor)),
-                 ),
-               ],
-             );
-           },
-         );
-       },
-     );
-   }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateInDialog) {
+            return AlertDialog(
+              title: const Text('Settings'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text('Receive Financial Suggestions'),
+                    value: _userData?['receiveSuggestions'] ?? false,
+                    activeThumbColor: _primaryColor,
+                    onChanged: (bool value) {
+                      setStateInDialog(
+                        () => _userData?['receiveSuggestions'] = value,
+                      );
+                      _updateSuggestionsPreference(value);
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Change Password'),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: _primaryColor,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushNamed(context, '/change-password');
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Close', style: TextStyle(color: _primaryColor)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   // ⭐️ FIX APPLIED HERE ⭐️
   void _viewNotifications() {

@@ -208,8 +208,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           controller: _passwordController,
                           labelText: 'New Password (min 6 characters)',
                           validator: (v) {
-                            if (v == null || v.length < 6)
+                            if (v == null || v.length < 6) {
                               return 'Password must be at least 6 characters long';
+                            }
                             return null;
                           },
                         ),

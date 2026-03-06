@@ -312,7 +312,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
           builder: (context, setStateInDialog) {
             // --- Helper Functions in Dialog Scope ---
 
-            Future<void> _selectDate(bool isDueDate) async {
+            Future<void> selectDate(bool isDueDate) async {
               final DateTime? picked = await showDatePicker(
                 context: context,
                 initialDate: isDueDate
@@ -354,7 +354,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
               }
             }
 
-            Widget _buildDueDaySelector() {
+            Widget buildDueDaySelector() {
               if (selectedFrequency == 'Monthly' ||
                   selectedFrequency == 'Quarterly' ||
                   selectedFrequency == 'Annually') {
@@ -364,7 +364,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     border: OutlineInputBorder(),
                   ),
-                  value: selectedDayOfMonth.clamp(1, 28),
+                  initialValue: selectedDayOfMonth.clamp(1, 28),
                   items: List.generate(28, (i) => i + 1)
                       .map(
                         (day) => DropdownMenuItem<int>(
@@ -399,7 +399,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                     contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     border: OutlineInputBorder(),
                   ),
-                  value: selectedDayOfWeek,
+                  initialValue: selectedDayOfWeek,
                   items: _daysOfWeek.map((day) {
                     return DropdownMenuItem<String>(
                       value: day,
@@ -449,7 +449,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                         border: OutlineInputBorder(),
                       ),
-                      value: selectedFrequency,
+                      initialValue: selectedFrequency,
                       items: _frequencies.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
@@ -474,7 +474,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                       },
                     ),
                     const SizedBox(height: 15),
-                    _buildDueDaySelector(),
+                    buildDueDaySelector(),
                     const SizedBox(height: 15),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -486,7 +486,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                         Icons.calendar_today,
                         color: _deepTeal, // Use primary color
                       ),
-                      onTap: () => _selectDate(true),
+                      onTap: () => selectDate(true),
                     ),
                     const Divider(),
                     ListTile(
@@ -511,7 +511,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                               onPressed: () =>
                                   setStateInDialog(() => endDate = null),
                             ),
-                      onTap: () => _selectDate(false),
+                      onTap: () => selectDate(false),
                     ),
                     const Divider(),
                     // ⭐️ NEW WIDGET: Notification Days Selector ⭐️
@@ -521,7 +521,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                         border: OutlineInputBorder(),
                       ),
-                      value: notifyDaysBefore,
+                      initialValue: notifyDaysBefore,
                       items: [0, 1, 2, 3, 5, 7, 10].map((int days) {
                         String text;
                         if (days == 0) {
@@ -564,7 +564,7 @@ class _RecurringPaymentsPageState extends State<RecurringPaymentsPage> {
                           isActive = value;
                         });
                       },
-                      activeColor: _deepTeal, // Use primary color
+                      activeThumbColor: _deepTeal, // Use primary color
                     ),
                   ],
                 ),

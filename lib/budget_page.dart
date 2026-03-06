@@ -3,9 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-import '../services/voice_input_service.dart';
-import '../utils/voice_command_parser.dart';
-
 const Color _primaryColor = Color(0xFF008080);
 const Color _secondaryColor = Color(0xFFB76E79);
 const Color _gradientStart = Color(0xFF2C3E50);
@@ -86,8 +83,7 @@ class _BudgetPageState extends State<BudgetPage> {
         final data = doc.data();
         final category = (data['category'] ?? 'other').toString().toLowerCase();
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
-        _categorySpent[category] =
-            (_categorySpent[category] ?? 0) + amount;
+        _categorySpent[category] = (_categorySpent[category] ?? 0) + amount;
       }
     });
   }
@@ -95,100 +91,96 @@ class _BudgetPageState extends State<BudgetPage> {
   // ================= AI FEATURE =================
 
   Future<void> _generateAISuggestedBudget() async {
-  final currentUser = user;
-  if (currentUser == null) return;
+    final currentUser = user;
+    if (currentUser == null) return;
 
-  final now = DateTime.now();
-  final oneYearAgo = DateTime(now.year - 1, now.month, now.day);
+    final now = DateTime.now();
+    final oneYearAgo = DateTime(now.year - 1, now.month, now.day);
 
-  final spendingSnapshot = await FirebaseFirestore.instance
-      .collection('spending')
-      .where('userId', isEqualTo: currentUser.uid)
-      .where('date',
-          isGreaterThanOrEqualTo: Timestamp.fromDate(oneYearAgo))
-      .get();
+    final spendingSnapshot = await FirebaseFirestore.instance
+        .collection('spending')
+        .where('userId', isEqualTo: currentUser.uid)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(oneYearAgo))
+        .get();
 
-  Map<String, double> categoryTotals = {};
-  Map<String, Set<String>> categoryActiveMonths = {};
+    Map<String, double> categoryTotals = {};
+    Map<String, Set<String>> categoryActiveMonths = {};
 
-  for (var doc in spendingSnapshot.docs) {
-    final data = doc.data();
+    for (var doc in spendingSnapshot.docs) {
+      final data = doc.data();
 
-    final category =
-        (data['category'] ?? 'other').toString().toLowerCase();
+      final category = (data['category'] ?? 'other').toString().toLowerCase();
 
-    final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+      final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
 
-    if (data['date'] != null) {
-      final Timestamp timestamp = data['date'];
-      final DateTime date = timestamp.toDate();
+      if (data['date'] != null) {
+        final Timestamp timestamp = data['date'];
+        final DateTime date = timestamp.toDate();
 
-      final monthKey = "${date.year}-${date.month}";
+        final monthKey = "${date.year}-${date.month}";
 
-      categoryActiveMonths.putIfAbsent(category, () => {});
-      categoryActiveMonths[category]!.add(monthKey);
+        categoryActiveMonths.putIfAbsent(category, () => {});
+        categoryActiveMonths[category]!.add(monthKey);
+      }
+
+      categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
     }
 
-    categoryTotals[category] =
-        (categoryTotals[category] ?? 0) + amount;
-  }
+    Map<String, double> suggestedBudgets = {};
 
-  Map<String, double> suggestedBudgets = {};
+    categoryTotals.forEach((category, totalSpent) {
+      final activeMonths = categoryActiveMonths[category]?.length ?? 1;
 
-  categoryTotals.forEach((category, totalSpent) {
-    final activeMonths =
-        categoryActiveMonths[category]?.length ?? 1;
+      final monthlyAverage = totalSpent / activeMonths;
 
-    final monthlyAverage = totalSpent / activeMonths;
+      suggestedBudgets[category] = monthlyAverage * 1.1; // 10% buffer
+    });
 
-    suggestedBudgets[category] =
-        monthlyAverage * 1.1; // 10% buffer
-  });
+    if (suggestedBudgets.isEmpty) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => const AlertDialog(
+          title: Text("AI Suggested Budget"),
+          content: Text("No spending data found in last 1 year."),
+        ),
+      );
+      return;
+    }
 
-  if (suggestedBudgets.isEmpty) {
     if (!mounted) return;
+
     showDialog(
       context: context,
-      builder: (_) => const AlertDialog(
-        title: Text("AI Suggested Budget"),
-        content: Text("No spending data found in last 1 year."),
+      builder: (_) => AlertDialog(
+        title: const Text("AI Suggested Budget (1-Year Smart Avg)"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: suggestedBudgets.entries.map((entry) {
+              return ListTile(
+                title: Text(entry.key.toUpperCase()),
+                subtitle: Text(
+                  "Based on ${categoryActiveMonths[entry.key]?.length ?? 1} active months",
+                ),
+                trailing: Text(
+                  _formatCurrency(entry.value),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
       ),
     );
-    return;
   }
-
-  if (!mounted) return;
-
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text("AI Suggested Budget (1-Year Smart Avg)"),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView(
-          shrinkWrap: true,
-          children: suggestedBudgets.entries.map((entry) {
-            return ListTile(
-              title: Text(entry.key.toUpperCase()),
-              subtitle: Text(
-                  "Based on ${categoryActiveMonths[entry.key]?.length ?? 1} active months"),
-              trailing: Text(
-                _formatCurrency(entry.value),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Close"),
-        ),
-      ],
-    ),
-  );
-}
   // ================= ADD / UPDATE =================
 
   Future<void> _addBudget() async {
@@ -196,8 +188,7 @@ class _BudgetPageState extends State<BudgetPage> {
     if (currentUser == null) return;
 
     final category = _selectedCategory ?? _categoryController.text.trim();
-    final amount =
-        double.tryParse(_budgetController.text.trim()) ?? 0.0;
+    final amount = double.tryParse(_budgetController.text.trim()) ?? 0.0;
 
     if (category.isEmpty || amount <= 0) return;
 
@@ -262,38 +253,32 @@ class _BudgetPageState extends State<BudgetPage> {
                 )
               : ListView(
                   children: _categoryBudgets.keys.map((category) {
-                    final budget =
-                        _categoryBudgets[category] ?? 0.0;
-                    final spent =
-                        _categorySpent[category] ?? 0.0;
-                    
-                    final double progress =
-                        budget > 0 ? (spent / budget) : 0.0;
+                    final budget = _categoryBudgets[category] ?? 0.0;
+                    final spent = _categorySpent[category] ?? 0.0;
+
+                    final double progress = budget > 0 ? (spent / budget) : 0.0;
 
                     return Card(
                       color: _cardColor,
-                      margin:
-                          const EdgeInsets.symmetric(vertical: 8),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               category.toUpperCase(),
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             LinearProgressIndicator(
                               value: progress > 1 ? 1.0 : progress.toDouble(),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                                "Spent: ${_formatCurrency(spent)}"),
-                            Text(
-                                "Budget: ${_formatCurrency(budget)}"),
+                            Text("Spent: ${_formatCurrency(spent)}"),
+                            Text("Budget: ${_formatCurrency(budget)}"),
                           ],
                         ),
                       ),
@@ -304,7 +289,6 @@ class _BudgetPageState extends State<BudgetPage> {
       ),
 
       // ================= FLOATING BUTTONS =================
-
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -336,27 +320,20 @@ class _BudgetPageState extends State<BudgetPage> {
         content: TextField(
           controller: _budgetController,
           keyboardType: TextInputType.number,
-          decoration:
-              const InputDecoration(labelText: "Amount"),
+          decoration: const InputDecoration(labelText: "Amount"),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),
-          ElevatedButton(
-            onPressed: _addBudget,
-            child: const Text("Save"),
-          ),
+          ElevatedButton(onPressed: _addBudget, child: const Text("Save")),
         ],
       ),
     );
   }
 
   String _formatCurrency(double amount) {
-    return NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '₹',
-    ).format(amount);
+    return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
   }
 }

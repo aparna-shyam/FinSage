@@ -13,24 +13,15 @@ import 'package:finsage/goals_page.dart';
 import 'package:finsage/profile_page.dart';
 import 'package:finsage/insights_page.dart';
 import 'package:finsage/category_selection_page.dart';
-
-// ⭐️ NEW IMPORT for Recurring Payments page ⭐️
 import 'package:finsage/recurring_payments.dart';
 
-// 💠 Define the Primary/Accent color: Deep Teal ⭐️
-const Color _primaryColor = Color(0xFF008080);
-// 🌹 Define the Secondary color: Rose Gold ⭐️
-const Color _secondaryColor = Color(0xFFB76E79);
-
-// 🔵 Gradient Start Color: Dark Blue-Purple
+// 💠 Theme Colors
+const Color _primaryColor = Color(0xFF008080); // Deep Teal
+const Color _secondaryColor = Color(0xFFB76E79); // Rose Gold
 const Color _gradientStartColor = Color(0xFF2C3E50);
-// 🔷 Gradient End Color: Lighter Blue-Teal
 const Color _gradientEndColor = Color(0xFF4CA1AF);
-
-// ⬜ Define the Card/Box color: Pure White ⭐️
 const Color _cardColor = Color(0xFFFFFFFF);
 
-// ⭐️ NEW: GlobalKey to access the state of _DashboardHome for refresh ⭐️
 final GlobalKey<_DashboardHomeState> _dashboardHomeKey =
     GlobalKey<_DashboardHomeState>();
 
@@ -44,19 +35,19 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 0;
 
-  // 1. Add the new page to the list of pages - MODIFIED to use GlobalKey
-  // FIX: Removed 'const' keyword where necessary to avoid constructor errors.
+  // 1. Updated List of Pages (Added ChatBotPage)
   final List<Widget> _pages = [
-    _DashboardHome(key: _dashboardHomeKey), // <--- MODIFIED to pass key
+    _DashboardHome(key: _dashboardHomeKey),
     const TransactionsPage(),
     const RecurringPaymentsPage(),
     const BudgetPage(),
     const GoalsPage(),
     const InsightsPage(),
+    const ChatBotPage(), // ⭐ NEW
     const ProfilePage(),
   ];
 
-  // 2. Add the title for the new page
+  // 2. Updated Titles (Added FinSage AI)
   final List<String> _pageTitles = const [
     'Home',
     'Transactions',
@@ -64,10 +55,11 @@ class _DashboardPageState extends State<DashboardPage> {
     'Budget',
     'Goals',
     'Insights',
+    'FinSage AI', // ⭐ NEW
     'Profile',
   ];
 
-  // 3. Add the icon for the new page
+  // 3. Updated Icons (Added Robot Icon)
   final List<IconData> _pageIcons = const [
     Icons.home,
     Icons.swap_horiz,
@@ -75,6 +67,7 @@ class _DashboardPageState extends State<DashboardPage> {
     Icons.pie_chart,
     Icons.star,
     Icons.insights,
+    Icons.smart_toy, // ⭐ NEW
     Icons.person,
   ];
 
@@ -82,14 +75,11 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _selectedIndex = index;
     });
-    // Close the drawer after selection
     Navigator.pop(context);
   }
 
-  // ⭐️ Updated Widget for the Navigation Drawer with Gradient Background and Mascot Image ⭐️
   Widget _buildDrawer() {
     return Drawer(
-      // The drawer itself needs a gradient background
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -101,17 +91,15 @@ class _DashboardPageState extends State<DashboardPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            // Header for the Drawer
             DrawerHeader(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // ⭐️ MASCOT IMAGE WIDGET ⭐️
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.asset(
-                      'assets/bodhi/casual.png', // Your image path
+                      'assets/bodhi/casual.png',
                       height: 60,
                       width: 60,
                       fit: BoxFit.cover,
@@ -133,7 +121,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
                   const Text(
                     'Financial Wisdom, Daily...',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
@@ -141,23 +128,20 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
-            // List of navigation items
             ...List.generate(_pages.length, (index) {
               return ListTile(
                 leading: Icon(
                   _pageIcons[index],
                   color: _selectedIndex == index
                       ? _secondaryColor
-                      : Colors
-                            .white70, // Rose Gold for selected, white for others
+                      : Colors.white70,
                 ),
                 title: Text(
                   _pageTitles[index],
                   style: TextStyle(
                     color: _selectedIndex == index
                         ? _secondaryColor
-                        : Colors
-                              .white, // Rose Gold for selected, white for others
+                        : Colors.white,
                     fontWeight: _selectedIndex == index
                         ? FontWeight.bold
                         : FontWeight.normal,
@@ -166,28 +150,16 @@ class _DashboardPageState extends State<DashboardPage> {
                 onTap: () => _onItemTapped(index),
               );
             }),
-
-            // (Sign Out option removed)
           ],
         ),
       ),
     );
   }
 
-  // Removed _buildDashboardHomeWithGradient as it's no longer necessary.
-
   @override
   Widget build(BuildContext context) {
-    // The IndexedStack now holds ALL pages, including the home page.
-    final Widget bodyContent = IndexedStack(
-      index: _selectedIndex,
-      children: _pages,
-    );
-
     return Scaffold(
-      // AppBar uses the primary color (Deep Teal)
       appBar: AppBar(
-        // 🚨 FIX for AppBar Title: Use _DashboardHomeTitle widget to get the username asynchronously
         title: _selectedIndex == 0
             ? const _DashboardHomeTitle()
             : Text(
@@ -196,10 +168,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
         backgroundColor: _primaryColor,
         automaticallyImplyLeading: true,
-        actions: const [],
       ),
-
-      // ⭐️ MODIFIED: Wrap the entire body in a Container with the gradient to cover the full page ⭐️
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -208,55 +177,35 @@ class _DashboardPageState extends State<DashboardPage> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: bodyContent, // The IndexedStack sits on top of the gradient
+        child: IndexedStack(index: _selectedIndex, children: _pages),
       ),
-
-      // Drawer must be placed directly inside the Scaffold.
       drawer: _buildDrawer(),
-
-      // ⭐️ MODIFIED: FAB uses await to trigger data refresh on return ⭐️
       floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
           ? FloatingActionButton(
               onPressed: () async {
-                // Wait for the CategorySelectionPage (and subsequent pages) to pop
-                final result = await Navigator.push(
-                  // <--- AWAITING THE PUSH
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const CategorySelectionPage(),
                   ),
                 );
-
-                // After returning, if the result indicates a transaction was saved (e.g., result is true)
-                // or simply resume, check if we're on the Home tab and refresh.
                 if (_selectedIndex == 0 &&
                     _dashboardHomeKey.currentState != null) {
-                  _dashboardHomeKey.currentState!
-                      .refreshData(); // <--- NEW CALL
-                }
-
-                // You would need to add a refresh logic to TransactionsPage (index 1) too if it's not
-                // automatically refreshing when the IndexedStack shows it again.
-                if (_selectedIndex == 1) {
-                  // For TransactionsPage, you might use a similar key or a listener
-                  // if it's not refreshing automatically. For now, rely on IndexedStack rebuild.
+                  _dashboardHomeKey.currentState!.refreshData();
                 }
               },
-              backgroundColor: _secondaryColor, // Rose Gold for FAB
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-              ), // White icon for contrast on Rose Gold
+              backgroundColor: _secondaryColor,
+              child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
     );
   }
 }
 
-// ⭐️ NEW Widget to handle asynchronous user name fetching for the AppBar title ⭐️
+// --- Dashboard Logic & Widgets ---
+
 class _DashboardHomeTitle extends StatefulWidget {
   const _DashboardHomeTitle();
-
   @override
   State<_DashboardHomeTitle> createState() => _DashboardHomeTitleState();
 }
@@ -273,28 +222,17 @@ class _DashboardHomeTitleState extends State<_DashboardHomeTitle> {
   Future<void> _fetchUserName() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .get();
-
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
-        final name = data['name'] ?? 'User';
-        if (mounted) {
-          setState(() {
-            _userName = name;
-          });
-        }
+        if (mounted) setState(() => _userName = data['name'] ?? 'User');
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _userName = 'User'; // Fallback
-        });
-      }
+      if (mounted) setState(() => _userName = 'User');
     }
   }
 
@@ -308,88 +246,47 @@ class _DashboardHomeTitleState extends State<_DashboardHomeTitle> {
 }
 
 class _DashboardHome extends StatefulWidget {
-  // MODIFIED: Added Key to constructor
-  const _DashboardHome({Key? key}) : super(key: key);
-
+  const _DashboardHome({super.key});
   @override
   _DashboardHomeState createState() => _DashboardHomeState();
 }
 
 class _DashboardHomeState extends State<_DashboardHome> {
-  String _userName = '';
   double _currentBalance = 0;
   double _totalSpent = 0;
   double _monthlyBudget = 15000;
   final Map<String, double> _monthlySpending = {};
   Map<String, List<Map<String, dynamic>>> _groupedTransactions = {};
   bool _isLoading = true;
-  String _apiTip = "Loading daily tip...";
-
-  User? get user => FirebaseAuth.instance.currentUser;
   final _newsService = NewsService();
 
-  // ⭐️ NEW: Public refresh method ⭐️
-  Future<void> refreshData() async {
-    await _fetchDashboardData();
-  }
+  Future<void> refreshData() async => await _fetchDashboardData();
 
   @override
   void initState() {
     super.initState();
-    refreshData(); // <--- MODIFIED to call the public method
-  }
-
-  Map<String, List<Map<String, dynamic>>> _groupTransactionsByDate(
-    List<Map<String, dynamic>> transactions,
-  ) {
-    Map<String, List<Map<String, dynamic>>> grouped = {};
-    final DateFormat formatter = DateFormat('EEEE, d MMMM yyyy');
-
-    for (var transaction in transactions) {
-      final date = (transaction['date'] as Timestamp).toDate();
-      final dateKey = formatter.format(date);
-
-      if (!grouped.containsKey(dateKey)) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey]!.add(transaction);
-    }
-    return grouped;
+    refreshData();
   }
 
   Future<void> _fetchDashboardData() async {
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
+    if (currentUser == null) return;
 
     try {
-      if (mounted)
-        setState(() => _isLoading = true); // Set loading before fetch
+      if (mounted) setState(() => _isLoading = true);
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .get();
-
-      double initialBalance = 0;
-
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>? ?? {};
-        _userName = data['name'] ?? 'User';
         _monthlyBudget = (data['monthlyBudget'] as num?)?.toDouble() ?? 15000;
-        initialBalance =
-            (data['initialBalance'] as num?)?.toDouble() ?? _monthlyBudget;
       }
 
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
-      final sevenDaysAgo = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(const Duration(days: 7));
+      final sevenDaysAgo = now.subtract(const Duration(days: 7));
 
       final spendingSnapshot = await FirebaseFirestore.instance
           .collection('spending')
@@ -398,7 +295,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
           .get();
 
       double totalSpending = 0;
-      _monthlySpending.clear(); // Clear old data
+      _monthlySpending.clear();
       for (var doc in spendingSnapshot.docs) {
         final data = doc.data();
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
@@ -412,7 +309,6 @@ class _DashboardHomeState extends State<_DashboardHome> {
       }
 
       _totalSpent = totalSpending;
-      // FIX: Current balance should be monthly budget minus total spent
       _currentBalance = _monthlyBudget - totalSpending;
 
       final recentTransactionsSnapshot = await FirebaseFirestore.instance
@@ -425,213 +321,188 @@ class _DashboardHomeState extends State<_DashboardHome> {
       final recentTransactions = recentTransactionsSnapshot.docs
           .map((doc) => doc.data())
           .toList();
-
       _groupedTransactions = _groupTransactionsByDate(recentTransactions);
-
-      final tips = await _newsService.fetchFinancialNewsAndTips();
-      if (tips.isNotEmpty) {
-        _apiTip = tips.first['text'] ?? "Try setting up a budget!";
-      }
     } catch (e) {
-      debugPrint('Error fetching dashboard data: $e');
+      debugPrint('Error: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  String _formatCurrency(double amount) {
-    return NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
+  Map<String, List<Map<String, dynamic>>> _groupTransactionsByDate(
+    List<Map<String, dynamic>> transactions,
+  ) {
+    Map<String, List<Map<String, dynamic>>> grouped = {};
+    final DateFormat formatter = DateFormat('EEEE, d MMMM yyyy');
+    for (var tx in transactions) {
+      final dateKey = formatter.format((tx['date'] as Timestamp).toDate());
+      grouped.putIfAbsent(dateKey, () => []).add(tx);
+    }
+    return grouped;
   }
 
-  // ⭐️ Widget to build the Date Header (Text color changed to white/light for contrast)
-  Widget _buildDateHeader(String dateKey) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
-      child: Text(
-        dateKey,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white, // Text color on gradient background
-        ),
-      ),
-    );
-  }
+  String _formatCurrency(double amount) =>
+      NumberFormat.currency(locale: 'en_IN', symbol: '₹').format(amount);
 
   @override
   Widget build(BuildContext context) {
-    // ⭐️ MODIFIED: Use a white-colored CircularProgressIndicator for contrast on the dark gradient ⭐️
     if (_isLoading)
       return const Center(
         child: CircularProgressIndicator(color: Colors.white),
       );
 
-    const Color cardColor = _cardColor; // Pure White
-    const Color textColor = Colors.black; // Text color on white cards
+    final topThreeCategories =
+        (_monthlySpending.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value)))
+            .take(3);
 
-    final sortedSpending = _monthlySpending.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final topThreeCategories = sortedSpending.take(3);
-
-    final List<Widget> datedTransactionList = [];
-    final sortedDateKeys = _groupedTransactions.keys.toList()
-      ..sort(
-        (a, b) => DateFormat(
-          'EEEE, d MMMM yyyy',
-        ).parse(b).compareTo(DateFormat('EEEE, d MMMM yyyy').parse(a)),
-      );
-
-    for (var dateKey in sortedDateKeys) {
-      final dateTransactions = _groupedTransactions[dateKey]!;
-      datedTransactionList.add(_buildDateHeader(dateKey));
-
-      datedTransactionList.addAll(
-        dateTransactions.map((transaction) {
-          final description = transaction['description'] ?? 'N/A';
-          final category = transaction['category'] ?? 'N/A';
-          final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
-
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: cardColor, // ⭐️ Pure White for Card ⭐️
-            child: ListTile(
-              title: Text(
-                description,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-              subtitle: Text(
-                category,
-                style: const TextStyle(color: Colors.black54),
-              ),
-              trailing: Text(
-                _formatCurrency(amount),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: Colors.redAccent),
-              ),
-            ),
-          );
-        }),
-      );
-    }
-
-    // 🚨 FIX: Inner Scaffold body content must be placed inside a SingleChildScrollView
-    // The parent Scaffold now provides the gradient background.
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Current Balance Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              color: cardColor, // ⭐️ Pure White for Card ⭐️
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Current Balance',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: textColor),
-                    ),
-                    Text(
-                      _formatCurrency(_currentBalance),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.displaySmall?.copyWith(color: textColor),
-                    ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: _totalSpent / _monthlyBudget,
-                      backgroundColor: Colors.grey.shade400,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.green,
-                      ),
-                      minHeight: 10,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Spent this month: ${_formatCurrency(_totalSpent)} / ${_formatCurrency(_monthlyBudget)}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: textColor),
-                    ),
-                  ],
-                ),
-              ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(height: 20),
-
-            // Budget Progress for top 3 categories
-            Text(
-              'Budget Progress (Top Categories)',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-              ), // White text on gradient
-            ),
-            const SizedBox(height: 10),
-            ...topThreeCategories.map((entry) {
-              final category = entry.key;
-              final spent = entry.value;
-              final budget = _monthlyBudget / topThreeCategories.length;
-              final progress = budget > 0 ? spent / budget : 0.0;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: LinearPercentIndicator(
-                  lineHeight: 16.0,
-                  percent: progress > 1.0 ? 1.0 : progress,
-                  backgroundColor:
-                      Colors.white30, // Lighter background for progress bar
-                  progressColor: progress > 1.0
-                      ? Colors.red
-                      : _primaryColor, // Deep Teal for progress
-                  barRadius: const Radius.circular(8),
-                  center: Text(
-                    "$category: ${_formatCurrency(spent)} / ${_formatCurrency(budget)}",
-                    style: const TextStyle(fontSize: 12, color: Colors.white),
+            color: _cardColor,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(
+                    'Current Balance',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-              );
-            }),
-            const SizedBox(height: 20),
-
-            // Recent Transactions (Date-grouped)
-            Text(
-              'Recent Transactions (Last 7 Days)',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-              ), // White text on gradient
+                  Text(
+                    _formatCurrency(_currentBalance),
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: _totalSpent / _monthlyBudget,
+                    backgroundColor: Colors.grey.shade400,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.green,
+                    ),
+                    minHeight: 10,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Spent: ${_formatCurrency(_totalSpent)} / ${_formatCurrency(_monthlyBudget)}',
+                  ),
+                ],
+              ),
             ),
-            if (_groupedTransactions.isNotEmpty)
-              ...datedTransactionList
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Center(
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Budget Progress',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...topThreeCategories.map((entry) {
+            final progress = entry.value / (_monthlyBudget / 3);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: LinearPercentIndicator(
+                lineHeight: 16.0,
+                percent: progress > 1.0 ? 1.0 : progress,
+                backgroundColor: Colors.white30,
+                progressColor: progress > 1.0 ? Colors.red : _primaryColor,
+                barRadius: const Radius.circular(8),
+                center: Text(
+                  "${entry.key}: ${_formatCurrency(entry.value)}",
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 20),
+          const Text(
+            'Recent Transactions',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          ..._groupedTransactions.entries.map(
+            (group) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'No transactions found in the last 7 days.',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    group.key,
+                    style: const TextStyle(
                       color: Colors.white70,
-                    ), // Lighter text on gradient
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-            const SizedBox(height: 20),
-          ],
-        ),
+                ...group.value.map(
+                  (tx) => Card(
+                    color: _cardColor,
+                    child: ListTile(
+                      title: Text(
+                        tx['description'] ?? 'N/A',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(tx['category'] ?? 'N/A'),
+                      trailing: Text(
+                        _formatCurrency((tx['amount'] as num).toDouble()),
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ⭐ NEW: ChatBot Page Placeholder
+class ChatBotPage extends StatelessWidget {
+  const ChatBotPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.smart_toy, size: 80, color: Colors.white70),
+          SizedBox(height: 16),
+          Text(
+            'FinSage AI Assistant',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Text(
+              'Ask me anything about your spending or financial goals!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
       ),
     );
   }
