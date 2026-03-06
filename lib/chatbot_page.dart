@@ -13,17 +13,15 @@ class _ChatBotPageState extends State<ChatBotPage> {
   final FinanceExpertService _expertService = FinanceExpertService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Welcome message to greet the user
     _messages.add({
       "text":
-          "Hello! I'm **Bodhi**, your FinSage guide. Ask me anything about your spending or how to save better! 💰",
+          "Hey! I'm **Bodhi**. I've looked at your recent data. Want me to analyze your spending or give you some saving tips? 💰",
       "isUser": false,
     });
   }
@@ -40,8 +38,8 @@ class _ChatBotPageState extends State<ChatBotPage> {
     });
   }
 
-  void _sendMessage() async {
-    final text = _controller.text.trim();
+  void _sendMessage([String? quickText]) async {
+    final text = quickText ?? _controller.text.trim();
     if (text.isEmpty) return;
 
     setState(() {
@@ -57,83 +55,83 @@ class _ChatBotPageState extends State<ChatBotPage> {
         _messages.add({"text": response, "isUser": false});
         _isLoading = false;
       });
-      _scrollToBottom();
     } catch (e) {
       setState(() {
         _messages.add({
-          "text": "I'm having a bit of trouble connecting. Try again later!",
+          "text": "Expert Error: Please check your API key and connection.",
           "isUser": false,
         });
         _isLoading = false;
       });
     }
+    _scrollToBottom();
+  }
+
+  // ✨ IMPROVED: Glassmorphism Quick Action Button
+  Widget _quickAction(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: InkWell(
+        onTap: () => _sendMessage(label),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08), // Very subtle glass effect
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.15),
+            ), // Thin border
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // --- 1. Mascot Header Section ---
+        // Mascot Header
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.black12,
+            color: Colors.black.withOpacity(0.2),
             border: Border(
-              bottom: BorderSide(color: Colors.white.withOpacity(0.1)),
+              bottom: BorderSide(color: Colors.white.withOpacity(0.05)),
             ),
           ),
           child: Row(
             children: [
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.white24,
-                    backgroundImage: const AssetImage(
-                      'assets/bodhi/casual.png',
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      height: 12,
-                      width: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF2C3E50),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white10,
+                backgroundImage: AssetImage('assets/bodhi/casual.png'),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Bodhi AI",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    "Financial Expert • Online",
-                    style: TextStyle(color: Colors.white60, fontSize: 12),
-                  ),
-                ],
+              const Text(
+                "Bodhi AI",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
+              const Spacer(),
+              const Icon(Icons.info_outline, color: Colors.white38, size: 20),
             ],
           ),
         ),
 
-        // --- 2. Chat History ---
+        // Chat History
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
@@ -146,57 +144,77 @@ class _ChatBotPageState extends State<ChatBotPage> {
           ),
         ),
 
-        // --- 3. Input Section ---
+        // Input & Quick Actions
         if (_isLoading)
           const Padding(
             padding: EdgeInsets.only(bottom: 8),
             child: SizedBox(
               height: 2,
               child: LinearProgressIndicator(
-                backgroundColor: Colors.transparent,
                 color: Color(0xFFB76E79),
+                backgroundColor: Colors.transparent,
               ),
             ),
           ),
 
         SafeArea(
           child: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Ask about your budget...",
-                      hintStyle: TextStyle(color: Colors.white38),
-                      border: InputBorder.none,
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
+                // Quick Actions Row (Now Blended)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      _quickAction("Analyze spending"),
+                      _quickAction("Saving tips"),
+                      _quickAction("Budget status"),
+                    ],
                   ),
                 ),
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFB76E79),
-                      shape: BoxShape.circle,
+                const SizedBox(height: 4),
+                // Modern Rounded Input
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: TextField(
+                          controller: _controller,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: "Talk to Bodhi...",
+                            hintStyle: TextStyle(color: Colors.white38),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.arrow_upward,
-                      color: Colors.white,
-                      size: 20,
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () => _sendMessage(),
+                      child: const CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Color(0xFFB76E79), // Rose Gold
+                        child: Icon(
+                          Icons.arrow_upward,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -227,13 +245,13 @@ class _ChatBubble extends StatelessWidget {
               radius: 14,
               backgroundImage: AssetImage('assets/bodhi/casual.png'),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
           ],
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(14),
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                maxWidth: MediaQuery.of(context).size.width * 0.72,
               ),
               decoration: BoxDecoration(
                 color: isUser
@@ -245,14 +263,6 @@ class _ChatBubble extends StatelessWidget {
                   bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
                   bottomRight: isUser ? Radius.zero : const Radius.circular(20),
                 ),
-                boxShadow: [
-                  if (isUser)
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
               ),
               child: MarkdownBody(
                 data: text,

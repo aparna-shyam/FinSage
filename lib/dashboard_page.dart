@@ -53,7 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
     'Budget',
     'Goals',
     'Insights',
-    'FinSage AI',
+    'Chat with Bodhi',
     'Profile',
   ];
 
@@ -400,6 +400,3 @@ class _DashboardHomeState extends State<_DashboardHome> {
     );
   }
 }
-
-// 🛑 THE OLD PLACEHOLDER ChatBotPage CLASS IS DELETED FROM HERE 
-// BECAUSE WE ARE NOW IMPORTING IT FROM chatbot_page.dart

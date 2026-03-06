@@ -11,7 +11,7 @@ class FinanceExpertService {
     final apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
 
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       apiKey: apiKey,
       systemInstruction: Content.system(
         "You are FinSage AI, a certified financial advisor. "
